@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://classroom-informatika.vercel.app'),
   title: "Classroom Informatika | SMA Wahidiyah Kediri",
-  description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, preview kode real-time, dan penilaian otomatis untuk SMA Wahidiyah Kediri.",
+  description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, lingkungan kode interaktif berbasis Monaco Editor, dan penilaian otomatis untuk SMA Wahidiyah Kediri.",
   keywords: [
     "Classroom Informatika",
     "SMA Wahidiyah Kediri",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     locale: "id_ID",
     url: "https://classroom-informatika.vercel.app",
     title: "Classroom Informatika | SMA Wahidiyah Kediri",
-    description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, preview kode real-time, dan penilaian otomatis",
+    description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, lingkungan kode interaktif berbasis Monaco Editor, dan penilaian otomatis",
     siteName: "Classroom Informatika",
     images: [
       {
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Classroom Informatika | SMA Wahidiyah Kediri", 
-    description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, preview kode real-time, dan penilaian otomatis",
+    description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, lingkungan kode interaktif berbasis Monaco Editor, dan penilaian otomatis",
     images: ["/og-classroom.jpg"]
   },
   robots: {
