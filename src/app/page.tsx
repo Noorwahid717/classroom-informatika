@@ -48,8 +48,9 @@ export default function Home() {
     },
     {
       icon: Code,
-      title: 'Preview Kode',
-      description: 'Lihat dan edit kode langsung dengan Monaco Editor'
+      title: 'Lingkungan Kode Interaktif',
+      description:
+        'Monaco Editor terintegrasi dengan highlight sintaks, live preview, dan pengalaman menyerupai VS Code langsung di browser'
     },
     {
       icon: BarChart3,
@@ -124,8 +125,9 @@ export default function Home() {
               </span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Platform pembelajaran interaktif untuk mata pelajaran Informatika dengan 
-              sistem upload tugas ZIP, preview kode real-time, dan penilaian otomatis.
+              Platform pembelajaran interaktif untuk mata pelajaran Informatika dengan
+              lingkungan kode berbasis Monaco Editor, sistem upload tugas ZIP, dan
+              penilaian otomatis.
             </p>
             
             {!session && (
