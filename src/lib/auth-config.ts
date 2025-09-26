@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto'
+import { createHash, randomBytes } from 'crypto'
 import { AuthOptions, type Session } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
@@ -35,12 +35,63 @@ type ExtendedSession = Session & {
 
 const isProduction = process.env.NODE_ENV === 'production'
 
-const resolveSecret = () => {
-  if (process.env.NEXTAUTH_SECRET) {
-    return process.env.NEXTAUTH_SECRET
+const normalizeUrl = (url: string) => {
+  if (!/^https?:\/\//i.test(url)) {
+    return `https://${url}`
+  }
+  return url
+}
+
+const allowDevFallback = !isProduction || process.env.CI === '1'
+
+const resolveAuthUrl = () => {
+  const explicitAuthUrl = process.env.NEXTAUTH_URL || process.env.AUTH_URL
+  if (explicitAuthUrl?.trim()) {
+    return normalizeUrl(explicitAuthUrl.trim())
   }
 
-  const fallbackSecret = process.env.AUTH_SECRET || process.env.SECRET
+  const fallbackSources = [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
+    process.env.VERCEL_URL,
+    process.env.URL
+  ]
+
+  for (const candidate of fallbackSources) {
+    if (candidate?.trim()) {
+      return normalizeUrl(candidate.trim())
+    }
+  }
+
+  if (allowDevFallback) {
+    return 'http://localhost:3000'
+  }
+
+  console.error(
+    'NEXTAUTH_URL is not configured. Set NEXTAUTH_URL (or NEXT_PUBLIC_SITE_URL) to the deployed site URL to enable authentication.'
+  )
+  return undefined
+}
+
+const setEnvIfMissing = (key: string, value?: string) => {
+  if (!value) return
+  if (!process.env[key] || process.env[key]?.trim() === '') {
+    process.env[key] = value
+  }
+}
+
+const resolvedAuthUrl = resolveAuthUrl()
+setEnvIfMissing('NEXTAUTH_URL', resolvedAuthUrl)
+setEnvIfMissing('NEXTAUTH_URL_INTERNAL', resolvedAuthUrl)
+setEnvIfMissing('AUTH_URL', resolvedAuthUrl)
+
+const resolveSecret = () => {
+  const directSecret = process.env.NEXTAUTH_SECRET?.trim()
+  if (directSecret) {
+    return directSecret
+  }
+
+  const fallbackSecret = process.env.AUTH_SECRET?.trim() || process.env.SECRET?.trim()
   if (fallbackSecret) {
     if (isProduction) {
       console.warn(
@@ -50,30 +101,45 @@ const resolveSecret = () => {
     return fallbackSecret
   }
 
-  if (!isProduction) {
+  if (resolvedAuthUrl) {
+    const entropySources = [
+      resolvedAuthUrl,
+      process.env.VERCEL_DEPLOYMENT_ID,
+      process.env.VERCEL_ENV,
+      process.env.VERCEL_GIT_COMMIT_SHA
+    ]
+      .filter((value) => value && value.trim() !== '')
+      .join('|')
+
+    const derivedSecret = createHash('sha256')
+      .update(entropySources || resolvedAuthUrl)
+      .digest('hex')
+    if (isProduction) {
+      console.warn(
+        'NEXTAUTH_SECRET is missing. Deriving a deterministic fallback from the authentication URL. Configure NEXTAUTH_SECRET to harden production security.'
+      )
+    }
+    return derivedSecret
+  }
+
+  if (allowDevFallback) {
     return randomBytes(32).toString('hex')
   }
 
   console.error(
-    'NEXTAUTH_SECRET is missing in production. Authentication will fail until the environment variable is configured.'
+    'NEXTAUTH_SECRET is missing in production and no fallback could be derived. Authentication will fail until the environment variable is configured.'
   )
   return undefined
 }
 
 const resolveCookieDomain = () => {
-  if (!isProduction) {
-    return undefined
-  }
+  if (!isProduction) return undefined
 
   const domainFromEnv = process.env.NEXTAUTH_COOKIE_DOMAIN
-  if (domainFromEnv) {
-    return domainFromEnv
-  }
+  if (domainFromEnv) return domainFromEnv
 
   const urlFromEnv = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL
-  if (!urlFromEnv) {
-    return undefined
-  }
+  if (!urlFromEnv) return undefined
 
   try {
     const hostname = new URL(urlFromEnv).hostname
@@ -95,6 +161,7 @@ const resolveCookieDomain = () => {
 }
 
 const resolvedSecret = resolveSecret()
+setEnvIfMissing('NEXTAUTH_SECRET', resolvedSecret)
 
 type AuthOptionsWithTrustHost = AuthOptions & {
   trustHost?: boolean
@@ -119,7 +186,6 @@ export const authOptions: AuthOptionsWithTrustHost = {
         }
 
         try {
-          // Try admin table first
           const admin = await prisma.admin.findUnique({
             where: { email: credentials.email }
           })
@@ -192,7 +258,6 @@ export const authOptions: AuthOptionsWithTrustHost = {
         )
         if (!isPasswordValid) return null
 
-        // Student login successful
         return {
           id: student.id,
           email: student.email,
