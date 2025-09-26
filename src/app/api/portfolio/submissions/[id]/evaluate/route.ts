@@ -1,12 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/prisma'
 import {
   PortfolioRubricCriterion,
-  PortfolioSubmissionStatus
-} from '@prisma/client'
-import { RUBRIC_WEIGHTS, clampScore, RubricKey } from '@/lib/portfolio'
+  PortfolioSubmissionStatus,
+  RUBRIC_WEIGHTS,
+  clampScore,
+  RubricKey
+} from '@/lib/portfolio'
 import { sendPortfolioNotification } from '@/lib/email'
 
 type ScoreInput = {
@@ -54,7 +57,12 @@ export async function POST(
   const overallNote = typeof body.overallNote === 'string' ? body.overallNote.trim() : undefined
   const scoresInput = Array.isArray(body.scores) ? (body.scores as ScoreInput[]) : []
 
-  const submission = await prisma.portfolioSubmission.findUnique({
+  // Prisma schema di repositori ini belum menyertakan definisi tabel portfolio,
+  // sehingga kita perlu melakukan cast sementara ke tipe longgar.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const portfolioDb = prisma as any
+
+  const submission = await portfolioDb.portfolioSubmission.findUnique({
     where: { id },
     include: {
       student: true,
@@ -99,17 +107,19 @@ export async function POST(
 
   try {
     evaluation = await prisma.$transaction(async tx => {
-      const version = await tx.portfolioVersion.findUnique({ where: { id: versionId } })
+      const extendedTx = tx as unknown as typeof portfolioDb
+
+      const version = await extendedTx.portfolioVersion.findUnique({ where: { id: versionId } })
 
       if (!version) {
         throw new Error('Versi portfolio tidak ditemukan')
       }
 
-    let record = await tx.portfolioEvaluation.findUnique({ where: { versionId } })
+    let record = await extendedTx.portfolioEvaluation.findUnique({ where: { versionId } })
 
     if (record) {
-      await tx.portfolioRubricScore.deleteMany({ where: { evaluationId: record.id } })
-      record = await tx.portfolioEvaluation.update({
+      await extendedTx.portfolioRubricScore.deleteMany({ where: { evaluationId: record.id } })
+      record = await extendedTx.portfolioEvaluation.update({
         where: { id: record.id },
         data: {
           reviewerId: session.user.id,
@@ -119,7 +129,7 @@ export async function POST(
         }
       })
     } else {
-      record = await tx.portfolioEvaluation.create({
+      record = await extendedTx.portfolioEvaluation.create({
         data: {
           submissionId: submission.id,
           versionId,
@@ -131,7 +141,7 @@ export async function POST(
       })
     }
 
-    await tx.portfolioRubricScore.createMany({
+    await extendedTx.portfolioRubricScore.createMany({
       data: rubricScores.map(score => ({
         evaluationId: record!.id,
         criterion: score.criterion,
@@ -141,7 +151,7 @@ export async function POST(
       }))
     })
 
-    await tx.portfolioSubmission.update({
+    await extendedTx.portfolioSubmission.update({
       where: { id: submission.id },
       data: {
         status: evaluationStatus,
@@ -152,7 +162,7 @@ export async function POST(
       }
     })
 
-    const rubric = await tx.portfolioRubricScore.findMany({
+    const rubric = await extendedTx.portfolioRubricScore.findMany({
       where: { evaluationId: record.id }
     })
 

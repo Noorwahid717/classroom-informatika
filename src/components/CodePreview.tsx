@@ -1,9 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { Eye, Code, Download, ExternalLink, Folder, FileText } from 'lucide-react'
+import { Eye, Code, ExternalLink, Folder, FileText } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
 // Dynamically import Monaco Editor to avoid SSR issues
@@ -16,11 +15,13 @@ interface FileContent {
   [path: string]: string
 }
 
+interface FileStructureEntry {
+  size?: number
+  type?: string
+}
+
 interface FileStructure {
-  [path: string]: {
-    size: number
-    type: string
-  }
+  [path: string]: FileStructureEntry
 }
 
 interface CodePreviewProps {
@@ -39,82 +40,123 @@ interface FileNode {
   size?: number
 }
 
-export default function CodePreview({ 
-  submissionId, 
-  files = {}, 
-  structure = {},
-  className = '' 
+const buildFileTree = (files: FileContent, structure: FileStructure): FileNode[] => {
+  const roots: FileNode[] = []
+
+  Object.keys(files).forEach((path) => {
+    const parts = path.split('/')
+    let currentLevel = roots
+    let accumulatedPath = ''
+
+    parts.forEach((part, index) => {
+      accumulatedPath = accumulatedPath ? `${accumulatedPath}/${part}` : part
+      const existingNode = currentLevel.find((node) => node.name === part)
+      const isFile = index === parts.length - 1
+
+      if (existingNode) {
+        if (!isFile && existingNode.children) {
+          currentLevel = existingNode.children
+        }
+        return
+      }
+
+      const node: FileNode = {
+        name: part,
+        path: accumulatedPath,
+        type: isFile ? 'file' : 'folder',
+        ...(isFile
+          ? {
+              content: files[path],
+              size: structure[path]?.size
+            }
+          : { children: [] })
+      }
+
+      currentLevel.push(node)
+
+      if (!isFile && node.children) {
+        currentLevel = node.children
+      }
+    })
+  })
+
+  return roots
+}
+
+const normalizeStructure = (
+  structure: FileStructure | string[] | undefined,
+  files: FileContent
+): FileStructure => {
+  if (!structure) {
+    return {}
+  }
+
+  if (Array.isArray(structure)) {
+    return structure.reduce((acc, path) => {
+      const content = files[path] ?? ''
+      const size = typeof TextEncoder !== 'undefined'
+        ? new TextEncoder().encode(content).length
+        : content.length
+
+      acc[path] = {
+        size,
+        type: 'file'
+      }
+      return acc
+    }, {} as FileStructure)
+  }
+
+  return structure
+}
+
+export default function CodePreview({
+  submissionId,
+  files,
+  structure,
+  className
 }: CodePreviewProps) {
   const [activeFile, setActiveFile] = useState<string>('')
   const [previewMode, setPreviewMode] = useState<'preview' | 'code'>('preview')
-  const [fileTree, setFileTree] = useState<FileNode[]>([])
+  const [codeFiles, setCodeFiles] = useState<FileContent>(() => files ?? {})
+  const [fileStructure, setFileStructure] = useState<FileStructure>((): FileStructure =>
+    normalizeStructure(structure, files ?? {})
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const containerClassName = className ?? ''
 
-  // Build file tree structure
+  const fileTree = useMemo(() => buildFileTree(codeFiles, fileStructure), [codeFiles, fileStructure])
+
   useEffect(() => {
-    const buildFileTree = (files: FileContent, structure: FileStructure): FileNode[] => {
-      const tree: { [key: string]: FileNode } = {}
-      const roots: FileNode[] = []
-
-      Object.keys(files).forEach(path => {
-        const parts = path.split('/')
-        let currentLevel = tree
-
-        parts.forEach((part, index) => {
-          const fullPath = parts.slice(0, index + 1).join('/')
-          
-          if (!currentLevel[part]) {
-            const isFile = index === parts.length - 1
-            currentLevel[part] = {
-              name: part,
-              path: fullPath,
-              type: isFile ? 'file' : 'folder',
-              children: isFile ? undefined : [],
-              content: isFile ? files[path] : undefined,
-              size: isFile ? structure[path]?.size : undefined
-            }
-
-            if (index === 0) {
-              roots.push(currentLevel[part])
-            }
-          }
-
-          if (currentLevel[part].children && index < parts.length - 1) {
-            const childrenObj: { [key: string]: FileNode } = {}
-            currentLevel[part].children!.forEach(child => {
-              childrenObj[child.name] = child
-            })
-            currentLevel = childrenObj
-          }
-        })
-      })
-
-      return roots
+    if (files) {
+      setCodeFiles(files)
     }
+  }, [files])
 
-    const tree = buildFileTree(files, structure)
-    setFileTree(tree)
-
-    // Set default active file (first HTML file or first file)
-    const htmlFiles = Object.keys(files).filter(path => path.endsWith('.html'))
-    const defaultFile = htmlFiles.find(path => path.includes('index.html')) || 
-                       htmlFiles[0] || 
-                       Object.keys(files)[0]
-    
-    if (defaultFile) {
-      setActiveFile(defaultFile)
-    }
-  }, [files, structure])
-
-  // Load submission preview if not provided
   useEffect(() => {
-    if (Object.keys(files).length === 0 && submissionId) {
-      loadSubmissionPreview()
+    if (structure) {
+      setFileStructure(normalizeStructure(structure, files ?? {}))
     }
-  }, [submissionId])
+  }, [structure, files])
 
-  const loadSubmissionPreview = async () => {
+  useEffect(() => {
+    if (!Object.keys(codeFiles).length) {
+      return
+    }
+
+    const filePaths = Object.keys(codeFiles)
+    const htmlFiles = filePaths.filter((path) => path.endsWith('.html'))
+    const defaultFile =
+      htmlFiles.find((path) => path.includes('index.html')) || htmlFiles[0] || filePaths[0]
+
+    setActiveFile((current) => (current && codeFiles[current] ? current : defaultFile))
+  }, [codeFiles])
+
+  const loadSubmissionPreview = useCallback(async () => {
+    if (!submissionId) {
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -125,9 +167,11 @@ export default function CodePreview({
       }
 
       const result = await response.json()
-      if (result.success && result.data.preview) {
-        // Update files and structure from API response
-        // This would need to be handled by parent component
+      const preview = result?.data?.preview
+
+      if (result.success && preview?.files) {
+        setCodeFiles(preview.files)
+        setFileStructure(normalizeStructure(preview.structure, preview.files))
       } else {
         throw new Error('Preview not available')
       }
@@ -136,7 +180,17 @@ export default function CodePreview({
     } finally {
       setLoading(false)
     }
-  }
+  }, [submissionId])
+
+  useEffect(() => {
+    if (!submissionId || loading || error) {
+      return
+    }
+
+    if (Object.keys(codeFiles).length === 0) {
+      void loadSubmissionPreview()
+    }
+  }, [submissionId, codeFiles, loadSubmissionPreview, loading, error])
 
   // Get file language for Monaco Editor
   const getFileLanguage = (filename: string): string => {
@@ -166,13 +220,14 @@ export default function CodePreview({
   }
 
   // Render file tree
-  const renderFileTree = (nodes: FileNode[], level: number = 0): React.ReactElement[] => {
-    return nodes.map((node) => (
-      <div key={node.path} className={`ml-${level * 4}`}>
+  const renderFileTree = (nodes: FileNode[], level: number = 0): React.ReactElement[] =>
+    nodes.map((node) => (
+      <div key={node.path}>
         <div
           className={`flex items-center space-x-2 px-2 py-1 hover:bg-gray-100 cursor-pointer rounded ${
             activeFile === node.path ? 'bg-blue-50 text-blue-700' : ''
           }`}
+          style={{ paddingLeft: level * 16 }}
           onClick={() => node.type === 'file' && setActiveFile(node.path)}
         >
           {getFileIcon(node.name, node.type === 'folder')}
@@ -183,18 +238,13 @@ export default function CodePreview({
             </span>
           )}
         </div>
-        {node.children && node.children.length > 0 && (
-          <div className="ml-4">
-            {renderFileTree(node.children, level + 1)}
-          </div>
-        )}
+        {node.children && node.children.length > 0 && renderFileTree(node.children, level + 1)}
       </div>
     ))
-  }
 
   // Generate preview HTML
   const generatePreviewHTML = (): string => {
-    const htmlFile = files[activeFile] || Object.values(files).find(content => 
+    const htmlFile = codeFiles[activeFile] || Object.values(codeFiles).find(content =>
       content.includes('<html') || content.includes('<!DOCTYPE html')
     ) || ''
 
@@ -204,9 +254,9 @@ export default function CodePreview({
     let modifiedHTML = htmlFile
 
     // Find and inject CSS files
-    Object.keys(files).forEach(path => {
+    Object.keys(codeFiles).forEach(path => {
       if (path.endsWith('.css')) {
-        const cssContent = files[path]
+        const cssContent = codeFiles[path]
         const cssTag = `<style>\n${cssContent}\n</style>`
         
         if (modifiedHTML.includes('</head>')) {
@@ -218,9 +268,9 @@ export default function CodePreview({
     })
 
     // Find and inject JS files
-    Object.keys(files).forEach(path => {
+    Object.keys(codeFiles).forEach(path => {
       if (path.endsWith('.js')) {
-        const jsContent = files[path]
+        const jsContent = codeFiles[path]
         const scriptTag = `<script>\n${jsContent}\n</script>`
         
         if (modifiedHTML.includes('</body>')) {
@@ -236,7 +286,7 @@ export default function CodePreview({
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center h-64 ${className}`}>
+      <div className={`flex items-center justify-center h-64 ${containerClassName}`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
           <p className="text-gray-600">Loading preview...</p>
@@ -247,7 +297,7 @@ export default function CodePreview({
 
   if (error) {
     return (
-      <div className={`flex items-center justify-center h-64 ${className}`}>
+      <div className={`flex items-center justify-center h-64 ${containerClassName}`}>
         <div className="text-center text-red-600">
           <p className="mb-2">Error loading preview</p>
           <p className="text-sm">{error}</p>
@@ -264,16 +314,16 @@ export default function CodePreview({
     )
   }
 
-  if (Object.keys(files).length === 0) {
+  if (Object.keys(codeFiles).length === 0) {
     return (
-      <div className={`flex items-center justify-center h-64 ${className}`}>
+      <div className={`flex items-center justify-center h-64 ${containerClassName}`}>
         <p className="text-gray-500">No files to preview</p>
       </div>
     )
   }
 
   return (
-    <div className={`border border-gray-200 rounded-lg overflow-hidden ${className}`}>
+    <div className={`border border-gray-200 rounded-lg overflow-hidden ${containerClassName}`}>
       {/* Header */}
       <div className="bg-gray-50 border-b border-gray-200 px-4 py-2">
         <div className="flex items-center justify-between">
@@ -297,12 +347,20 @@ export default function CodePreview({
           </div>
           
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-1" />
-              Download
-            </Button>
             {previewMode === 'preview' && (
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const previewHTML = generatePreviewHTML()
+                  const newTab = window.open()
+
+                  if (newTab) {
+                    newTab.document.write(previewHTML)
+                    newTab.document.close()
+                  }
+                }}
+              >
                 <ExternalLink className="h-4 w-4 mr-1" />
                 Open in New Tab
               </Button>
@@ -331,11 +389,11 @@ export default function CodePreview({
             />
           ) : (
             <div className="h-full">
-              {activeFile && files[activeFile] ? (
+              {activeFile && codeFiles[activeFile] ? (
                 <MonacoEditor
                   height="100%"
                   language={getFileLanguage(activeFile)}
-                  value={files[activeFile]}
+                  value={codeFiles[activeFile]}
                   options={{
                     readOnly: true,
                     minimap: { enabled: false },
