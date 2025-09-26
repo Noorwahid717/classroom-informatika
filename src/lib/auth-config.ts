@@ -1,9 +1,37 @@
 import { randomBytes } from 'crypto'
-import { AuthOptions } from 'next-auth'
+import { AuthOptions, type Session } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import { verifyPassword } from '@/lib/auth'
+import type { AdapterUser } from 'next-auth/adapters'
+import type { User } from 'next-auth'
+import type { JWT } from 'next-auth/jwt'
+
+type ExtendedUser = (User | AdapterUser) & {
+  role?: string | null
+  userType?: string | null
+  studentId?: string | null
+  class?: string | null
+}
+
+type ExtendedJWT = JWT & {
+  role?: string
+  id?: string
+  userType?: string
+  studentId?: string
+  class?: string
+}
+
+type ExtendedSession = Session & {
+  user?: Session['user'] & {
+    id?: string
+    role?: string
+    userType?: string
+    studentId?: string
+    class?: string
+  }
+}
 
 const isProduction = process.env.NODE_ENV === 'production'
 
@@ -43,7 +71,6 @@ const resolveCookieDomain = () => {
   }
 
   const urlFromEnv = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL
-
   if (!urlFromEnv) {
     return undefined
   }
@@ -94,18 +121,13 @@ export const authOptions: AuthOptionsWithTrustHost = {
         try {
           // Try admin table first
           const admin = await prisma.admin.findUnique({
-            where: {
-              email: credentials.email
-            }
+            where: { email: credentials.email }
           })
 
           // If not found in admin table, try user table with ADMIN role
           if (!admin) {
             const user = await prisma.user.findFirst({
-              where: {
-                email: credentials.email,
-                role: 'ADMIN'
-              }
+              where: { email: credentials.email, role: 'ADMIN' }
             })
 
             if (user) {
@@ -113,10 +135,7 @@ export const authOptions: AuthOptionsWithTrustHost = {
                 credentials.password,
                 user.password || ''
               )
-
-              if (!isPasswordValid) {
-                return null
-              }
+              if (!isPasswordValid) return null
 
               return {
                 id: user.id,
@@ -134,10 +153,8 @@ export const authOptions: AuthOptionsWithTrustHost = {
             credentials.password,
             admin.password
           )
+          if (!isPasswordValid) return null
 
-          if (!isPasswordValid) {
-            return null
-          }
           return {
             id: admin.id,
             email: admin.email,
@@ -165,27 +182,17 @@ export const authOptions: AuthOptionsWithTrustHost = {
         }
 
         const student = await prisma.student.findUnique({
-          where: {
-            studentId: credentials.studentId
-          }
+          where: { studentId: credentials.studentId }
         })
-
-        if (!student || student.status !== 'active') {
-          return null
-        }
+        if (!student || student.status !== 'active') return null
 
         const isPasswordValid = await verifyPassword(
           credentials.password,
           student.password
         )
+        if (!isPasswordValid) return null
 
-        if (!isPasswordValid) {
-          return null
-        }
-
-        // Update last login
-        // Student login successful - no additional update needed
-
+        // Student login successful
         return {
           id: student.id,
           email: student.email,
@@ -220,17 +227,17 @@ export const authOptions: AuthOptionsWithTrustHost = {
   },
   debug: process.env.NODE_ENV === 'development',
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: ExtendedJWT; user?: ExtendedUser | null }) {
       if (user) {
-        token.role = user.role
+        token.role = user.role ?? undefined
         token.id = user.id
-        token.userType = user.userType
-        token.studentId = (user as any).studentId
-        token.class = (user as any).class
+        token.userType = user.userType ?? undefined
+        token.studentId = user.studentId ?? undefined
+        token.class = user.class ?? undefined
       }
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: ExtendedSession; token: ExtendedJWT }) {
       if (token) {
         session.user = {
           ...(session.user ?? {}),
@@ -243,18 +250,9 @@ export const authOptions: AuthOptionsWithTrustHost = {
       }
       return session
     },
-    async redirect({ url, baseUrl }) {
-      // If url starts with /, it's a relative path
-      if (url.startsWith('/')) {
-        return `${baseUrl}${url}`
-      }
-
-      // If url has same origin, allow it
-      if (new URL(url).origin === baseUrl) {
-        return url
-      }
-
-      // Default to homepage
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      if (new URL(url).origin === baseUrl) return url
       return baseUrl
     }
   }
