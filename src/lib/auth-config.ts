@@ -74,17 +74,13 @@ const resolveAuthUrl = () => {
 }
 
 const setEnvIfMissing = (key: string, value?: string) => {
-  if (!value) {
-    return
-  }
-
+  if (!value) return
   if (!process.env[key] || process.env[key]?.trim() === '') {
     process.env[key] = value
   }
 }
 
 const resolvedAuthUrl = resolveAuthUrl()
-
 setEnvIfMissing('NEXTAUTH_URL', resolvedAuthUrl)
 setEnvIfMissing('NEXTAUTH_URL_INTERNAL', resolvedAuthUrl)
 setEnvIfMissing('AUTH_URL', resolvedAuthUrl)
@@ -137,20 +133,13 @@ const resolveSecret = () => {
 }
 
 const resolveCookieDomain = () => {
-  if (!isProduction) {
-    return undefined
-  }
+  if (!isProduction) return undefined
 
   const domainFromEnv = process.env.NEXTAUTH_COOKIE_DOMAIN
-  if (domainFromEnv) {
-    return domainFromEnv
-  }
+  if (domainFromEnv) return domainFromEnv
 
   const urlFromEnv = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL
-
-  if (!urlFromEnv) {
-    return undefined
-  }
+  if (!urlFromEnv) return undefined
 
   try {
     const hostname = new URL(urlFromEnv).hostname
@@ -172,7 +161,6 @@ const resolveCookieDomain = () => {
 }
 
 const resolvedSecret = resolveSecret()
-
 setEnvIfMissing('NEXTAUTH_SECRET', resolvedSecret)
 
 type AuthOptionsWithTrustHost = AuthOptions & {
@@ -198,20 +186,14 @@ export const authOptions: AuthOptionsWithTrustHost = {
         }
 
         try {
-          // Try admin table first
           const admin = await prisma.admin.findUnique({
-            where: {
-              email: credentials.email
-            }
+            where: { email: credentials.email }
           })
 
           // If not found in admin table, try user table with ADMIN role
           if (!admin) {
             const user = await prisma.user.findFirst({
-              where: {
-                email: credentials.email,
-                role: 'ADMIN'
-              }
+              where: { email: credentials.email, role: 'ADMIN' }
             })
 
             if (user) {
@@ -219,10 +201,7 @@ export const authOptions: AuthOptionsWithTrustHost = {
                 credentials.password,
                 user.password || ''
               )
-
-              if (!isPasswordValid) {
-                return null
-              }
+              if (!isPasswordValid) return null
 
               return {
                 id: user.id,
@@ -240,10 +219,8 @@ export const authOptions: AuthOptionsWithTrustHost = {
             credentials.password,
             admin.password
           )
+          if (!isPasswordValid) return null
 
-          if (!isPasswordValid) {
-            return null
-          }
           return {
             id: admin.id,
             email: admin.email,
@@ -271,26 +248,15 @@ export const authOptions: AuthOptionsWithTrustHost = {
         }
 
         const student = await prisma.student.findUnique({
-          where: {
-            studentId: credentials.studentId
-          }
+          where: { studentId: credentials.studentId }
         })
-
-        if (!student || student.status !== 'active') {
-          return null
-        }
+        if (!student || student.status !== 'active') return null
 
         const isPasswordValid = await verifyPassword(
           credentials.password,
           student.password
         )
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        // Update last login
-        // Student login successful - no additional update needed
+        if (!isPasswordValid) return null
 
         return {
           id: student.id,
@@ -306,7 +272,7 @@ export const authOptions: AuthOptionsWithTrustHost = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60 // 30 days
   },
   cookies: {
     sessionToken: {
@@ -350,17 +316,8 @@ export const authOptions: AuthOptionsWithTrustHost = {
       return session
     },
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
-      // If url starts with /, it's a relative path
-      if (url.startsWith('/')) {
-        return `${baseUrl}${url}`
-      }
-      
-      // If url has same origin, allow it
-      if (new URL(url).origin === baseUrl) {
-        return url
-      }
-      
-      // Default to homepage
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      if (new URL(url).origin === baseUrl) return url
       return baseUrl
     }
   }
