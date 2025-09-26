@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import { AuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
@@ -5,6 +6,31 @@ import { prisma } from '@/lib/prisma'
 import { verifyPassword } from '@/lib/auth'
 
 const isProduction = process.env.NODE_ENV === 'production'
+
+const resolveSecret = () => {
+  if (process.env.NEXTAUTH_SECRET) {
+    return process.env.NEXTAUTH_SECRET
+  }
+
+  const fallbackSecret = process.env.AUTH_SECRET || process.env.SECRET
+  if (fallbackSecret) {
+    if (isProduction) {
+      console.warn(
+        'NEXTAUTH_SECRET is not set. Falling back to AUTH_SECRET/SECRET. Please rotate credentials as soon as possible.'
+      )
+    }
+    return fallbackSecret
+  }
+
+  if (!isProduction) {
+    return randomBytes(32).toString('hex')
+  }
+
+  console.error(
+    'NEXTAUTH_SECRET is missing in production. Authentication will fail until the environment variable is configured.'
+  )
+  return undefined
+}
 
 const resolveCookieDomain = () => {
   if (!isProduction) {
@@ -41,8 +67,15 @@ const resolveCookieDomain = () => {
   }
 }
 
-export const authOptions: AuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+const resolvedSecret = resolveSecret()
+
+type AuthOptionsWithTrustHost = AuthOptions & {
+  trustHost?: boolean
+}
+
+export const authOptions: AuthOptionsWithTrustHost = {
+  secret: resolvedSecret,
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
   providers: [
     // Admin Login Provider
@@ -112,7 +145,8 @@ export const authOptions: AuthOptions = {
             role: admin.role,
             userType: 'admin'
           }
-        } catch {
+        } catch (error) {
+          console.error('Admin credentials authorization failed:', error)
           return null
         }
       }
@@ -166,7 +200,7 @@ export const authOptions: AuthOptions = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60 // 30 days
   },
   cookies: {
     sessionToken: {
@@ -191,18 +225,21 @@ export const authOptions: AuthOptions = {
         token.role = user.role
         token.id = user.id
         token.userType = user.userType
-        token.studentId = user.studentId
-        token.class = user.class
+        token.studentId = (user as any).studentId
+        token.class = (user as any).class
       }
       return token
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.sub!
-        session.user.role = token.role as string
-        session.user.userType = token.userType as string
-        session.user.studentId = token.studentId as string
-        session.user.class = token.class as string
+        session.user = {
+          ...(session.user ?? {}),
+          id: token.sub ?? session.user?.id ?? '',
+          role: (token.role as string | undefined) ?? session.user?.role ?? 'GUEST',
+          userType: (token.userType as string | undefined) ?? session.user?.userType,
+          studentId: (token.studentId as string | undefined) ?? session.user?.studentId,
+          class: (token.class as string | undefined) ?? session.user?.class
+        }
       }
       return session
     },
@@ -211,12 +248,12 @@ export const authOptions: AuthOptions = {
       if (url.startsWith('/')) {
         return `${baseUrl}${url}`
       }
-      
+
       // If url has same origin, allow it
       if (new URL(url).origin === baseUrl) {
         return url
       }
-      
+
       // Default to homepage
       return baseUrl
     }
