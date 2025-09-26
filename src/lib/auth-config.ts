@@ -60,7 +60,7 @@ export const authOptions: AuthOptions = {
 
         try {
           // Try admin table first
-          let admin = await prisma.admin.findUnique({
+          const admin = await prisma.admin.findUnique({
             where: {
               email: credentials.email
             }
@@ -112,7 +112,7 @@ export const authOptions: AuthOptions = {
             role: admin.role,
             userType: 'admin'
           }
-        } catch (error) {
+        } catch {
           return null
         }
       }

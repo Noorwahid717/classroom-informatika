@@ -32,6 +32,35 @@ export const RUBRIC_WEIGHTS = {
 
 export type RubricKey = keyof typeof RUBRIC_WEIGHTS
 
+export const PortfolioRubricCriterion = {
+  HTML_STRUCTURE: "HTML_STRUCTURE",
+  CSS_RESPONSIVE: "CSS_RESPONSIVE",
+  JS_INTERACTIVITY: "JS_INTERACTIVITY",
+  CODE_QUALITY: "CODE_QUALITY",
+  CREATIVITY_BRIEF: "CREATIVITY_BRIEF",
+} as const
+
+export type PortfolioRubricCriterion =
+  (typeof PortfolioRubricCriterion)[keyof typeof PortfolioRubricCriterion]
+
+export const PortfolioSubmissionStatus = {
+  DRAFT: "DRAFT",
+  SUBMITTED: "SUBMITTED",
+  RETURNED: "RETURNED",
+  GRADED: "GRADED",
+} as const
+
+export type PortfolioSubmissionStatus =
+  (typeof PortfolioSubmissionStatus)[keyof typeof PortfolioSubmissionStatus]
+
+export const PortfolioArtifactType = {
+  EDITOR: "EDITOR",
+  UPLOAD: "UPLOAD",
+} as const
+
+export type PortfolioArtifactType =
+  (typeof PortfolioArtifactType)[keyof typeof PortfolioArtifactType]
+
 export function normalizeTags(value: unknown): string[] {
   if (!value) return []
 

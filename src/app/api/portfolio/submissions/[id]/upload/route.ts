@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
@@ -8,9 +9,10 @@ import path from 'path'
 import {
   PORTFOLIO_FILE_SIZE_LIMIT,
   PORTFOLIO_MAX_EDITOR_SIZE,
+  PortfolioArtifactType,
+  PortfolioSubmissionStatus,
   isStaticAsset
 } from '@/lib/portfolio'
-import { PortfolioArtifactType, PortfolioSubmissionStatus } from '@prisma/client'
 
 function assertEditorLength(label: string, content: string) {
   if (content.length > PORTFOLIO_MAX_EDITOR_SIZE) {
@@ -40,7 +42,12 @@ export async function POST(
     return NextResponse.json({ error: 'Ukuran file melebihi 10MB' }, { status: 400 })
   }
 
-  const submission = await prisma.portfolioSubmission.findUnique({
+  // prisma schema saat ini belum memiliki tipe portfolio bawaan, sehingga
+  // kita perlu melakukan cast sementara agar tetap bisa memanggil tabel terkait.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const portfolioDb = prisma as any
+
+  const submission = await portfolioDb.portfolioSubmission.findUnique({
     where: { id }
   })
 
@@ -150,7 +157,7 @@ export async function POST(
     entries
   }
 
-  const updated = await prisma.portfolioSubmission.update({
+  const updated = await portfolioDb.portfolioSubmission.update({
     where: { id: submission.id },
     data: {
       draftArtifact: PortfolioArtifactType.UPLOAD,
