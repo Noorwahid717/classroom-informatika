@@ -1,6 +1,7 @@
-import { RUBRIC_WEIGHTS } from '@/lib/portfolio'
-
-type PortfolioRubricCriterion = 'HTML_STRUCTURE' | 'CSS_RESPONSIVE' | 'JS_INTERACTIVITY' | 'CODE_QUALITY' | 'CREATIVITY_BRIEF'
+import {
+  PortfolioRubricCriterion,
+  RUBRIC_WEIGHTS,
+} from '@/lib/portfolio'
 
 const RUBRIC_LABELS: Record<PortfolioRubricCriterion, string> = {
   HTML_STRUCTURE: 'Struktur & Semantik HTML',
