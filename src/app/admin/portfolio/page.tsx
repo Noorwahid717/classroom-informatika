@@ -5,9 +5,11 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import {
   PortfolioRubricCriterion,
-  PortfolioSubmissionStatus
-} from '@prisma/client'
-import { buildSandboxedPreview, RUBRIC_WEIGHTS, RubricKey } from '@/lib/portfolio'
+  PortfolioSubmissionStatus,
+  buildSandboxedPreview,
+  RUBRIC_WEIGHTS,
+  RubricKey
+} from '@/lib/portfolio'
 import { PreviewFrame } from '@/components/portfolio/PreviewFrame'
 import { StatusBadge } from '@/components/portfolio/StatusBadge'
 

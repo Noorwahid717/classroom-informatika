@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
-import { useToast } from '@/components/ui/Toast'
+import { Toast } from '@/components/ui/Toast'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -49,12 +49,26 @@ export default function AdminLogin() {
       
       if (result?.error) {
         console.error('Login failed:', result.error)
-        setError('Email atau password salah. Silakan periksa kredensial Anda.')
-        setToast({
-          show: true,
-          message: 'Login gagal! Periksa email dan password Anda.',
-          type: 'error'
-        })
+
+        if (result.error === 'Configuration') {
+          setError(
+            'Konfigurasi server NextAuth belum lengkap. Mohon hubungi administrator untuk memastikan NEXTAUTH_SECRET dan NEXTAUTH_URL sudah diatur.'
+          )
+          setToast({
+            show: true,
+            message:
+              'Konfigurasi autentikasi belum lengkap. Hubungi pengelola sistem untuk memperbarui NEXTAUTH_SECRET dan NEXTAUTH_URL.',
+            type: 'warning'
+          })
+        } else {
+          setError('Email atau password salah. Silakan periksa kredensial Anda.')
+          setToast({
+            show: true,
+            message: 'Login gagal! Periksa email dan password Anda.',
+            type: 'error'
+          })
+        }
+
         setIsLoading(false)
         setLoadingMessage('')
       } else if (result?.ok) {

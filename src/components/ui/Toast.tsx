@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import { useState } from 'react'
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from "react"
+import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react"
 
-export interface Toast {
+export interface ToastMessage {
   id: string
-  type: 'success' | 'error' | 'info' | 'warning'
+  type: "success" | "error" | "info" | "warning"
   title: string
   message: string
   duration?: number
@@ -16,19 +16,17 @@ interface ToastProviderProps {
 }
 
 export const ToastContext = React.createContext<{
-  addToast: (toast: Omit<Toast, 'id'>) => void
+  addToast: (toast: Omit<ToastMessage, "id">) => void
   removeToast: (id: string) => void
 }>({
   addToast: () => {},
   removeToast: () => {}
 })
 
-import React from 'react'
-
 export function ToastProvider({ children }: ToastProviderProps) {
-  const [toasts, setToasts] = useState<Toast[]>([])
+  const [toasts, setToasts] = useState<ToastMessage[]>([])
 
-  const addToast = (toast: Omit<Toast, 'id'>) => {
+  const addToast = (toast: Omit<ToastMessage, "id">) => {
     const id = Math.random().toString(36).substr(2, 9)
     const newToast = { ...toast, id }
     
@@ -117,4 +115,81 @@ export const useToast = () => {
     throw new Error('useToast must be used within a ToastProvider')
   }
   return context
+}
+
+type InlineToastType = ToastMessage["type"]
+
+export interface ToastProps {
+  message: string
+  type: InlineToastType
+  isVisible: boolean
+  onClose: () => void
+  duration?: number
+  title?: string
+}
+
+const toastTypeStyles: Record<InlineToastType, string> = {
+  success: "bg-green-50 text-green-800 border-green-200",
+  error: "bg-red-50 text-red-800 border-red-200",
+  warning: "bg-yellow-50 text-yellow-800 border-yellow-200",
+  info: "bg-blue-50 text-blue-800 border-blue-200",
+}
+
+const toastTypeIcons: Record<InlineToastType, React.ReactNode> = {
+  success: <CheckCircle className="h-5 w-5" />,
+  error: <AlertCircle className="h-5 w-5" />,
+  warning: <AlertTriangle className="h-5 w-5" />,
+  info: <Info className="h-5 w-5" />,
+}
+
+export const Toast = ({
+  message,
+  type,
+  isVisible,
+  onClose,
+  duration = 4000,
+  title,
+}: ToastProps) => {
+  useEffect(() => {
+    if (!isVisible) {
+      return
+    }
+
+    const timeout = setTimeout(() => {
+      onClose()
+    }, duration)
+
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [duration, isVisible, onClose])
+
+  const styles = toastTypeStyles[type]
+  const icon = useMemo(() => toastTypeIcons[type], [type])
+
+  if (!isVisible) {
+    return null
+  }
+
+  return (
+    <div
+      role="status"
+      aria-live="assertive"
+      className={`pointer-events-auto mx-auto flex w-full max-w-sm items-start gap-3 rounded-lg border p-4 shadow-lg ${styles}`}
+    >
+      <span aria-hidden>{icon}</span>
+      <div className="flex-1 text-sm">
+        {title ? <p className="font-medium">{title}</p> : null}
+        <p>{message}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        className="text-muted-foreground transition hover:text-foreground"
+        aria-label="Tutup notifikasi"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  )
 }
