@@ -200,7 +200,7 @@ export const authOptions: AuthOptionsWithTrustHost = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60 // 30 days
   },
   cookies: {
     sessionToken: {
@@ -225,8 +225,8 @@ export const authOptions: AuthOptionsWithTrustHost = {
         token.role = user.role
         token.id = user.id
         token.userType = user.userType
-        token.studentId = user.studentId
-        token.class = user.class
+        token.studentId = (user as any).studentId
+        token.class = (user as any).class
       }
       return token
     },
@@ -248,12 +248,12 @@ export const authOptions: AuthOptionsWithTrustHost = {
       if (url.startsWith('/')) {
         return `${baseUrl}${url}`
       }
-      
+
       // If url has same origin, allow it
       if (new URL(url).origin === baseUrl) {
         return url
       }
-      
+
       // Default to homepage
       return baseUrl
     }
