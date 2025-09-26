@@ -1,0 +1,237 @@
+// Classroom Informatika - Next.js + Vercel + Postgres
+// Schema Database untuk sistem classroom assessment
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. Users table dengan role
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String?  // nullable untuk OAuth
+  role      UserRole @default(STUDENT)
+  avatar    String?  // profile picture URL
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ownedClasses    Class[]        @relation("ClassOwner")
+  enrollments     Enrollment[]
+  submissions     Submission[]
+  comments        Comment[]
+  grades          Grade[]        @relation("GradedBy")
+  receivedGrades  Grade[]        @relation("GradedUser")
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+// 2. Classes table + relasi dengan users (owner)
+model Class {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  code        String   @unique // Class join code
+  semester    String   // e.g., "Ganjil 2024/2025"
+  year        String   // e.g., "2024"
+  isActive    Boolean  @default(true)
+  ownerId     String   // Teacher/Admin who owns this class
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  owner       User         @relation("ClassOwner", fields: [ownerId], references: [id])
+  enrollments Enrollment[]
+  assignments Assignment[]
+
+  @@map("classes")
+}
+
+// 3. Enrollments (user join ke class)
+model Enrollment {
+  id        String           @id @default(cuid())
+  userId    String
+  classId   String
+  role      EnrollmentRole   @default(STUDENT)
+  status    EnrollmentStatus @default(ACTIVE)
+  joinedAt  DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id])
+  class Class @relation(fields: [classId], references: [id])
+
+  @@unique([userId, classId])
+  @@map("enrollments")
+}
+
+enum EnrollmentRole {
+  TEACHER_ASSISTANT
+  STUDENT
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
+// 4. Assignments (tugas per kelas)
+model Assignment {
+  id               String            @id @default(cuid())
+  classId          String
+  title            String
+  description      String
+  instructions     String? // Detailed instructions
+  maxFileSize      Int               @default(10485760) // 10MB
+  allowedFileTypes String            @default(".html,.css,.js,.png,.jpg,.jpeg,.gif,.svg") // Comma separated
+  rubric           Json? // Rubric criteria and weights
+  dueDate          DateTime?
+  isPublished      Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  class       Class        @relation(fields: [classId], references: [id])
+  submissions Submission[]
+
+  @@map("assignments")
+}
+
+// 5. Submissions (status, preview path, score)
+model Submission {
+  id            String           @id @default(cuid())
+  assignmentId  String
+  userId        String
+  status        SubmissionStatus @default(DRAFT)
+  previewPath   String? // Blob storage path for index.html
+  zipPath       String? // Blob storage path for ZIP file
+  zipSize       Int? // File size in bytes
+  checkSummary  Json? // Lint results (ESLint/HTMLHint/Stylelint)
+  submittedAt   DateTime?
+  gradedAt      DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  // Relations
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+  comments   Comment[]
+  grades     Grade[]
+
+  @@unique([assignmentId, userId])
+  @@map("submissions")
+}
+
+enum SubmissionStatus {
+  DRAFT      // Being worked on
+  SUBMITTED  // Submitted for grading
+  GRADED     // Graded by teacher
+  RETURNED   // Returned for revision
+}
+
+// 6. Comments (inline feedback)
+model Comment {
+  id           String   @id @default(cuid())
+  submissionId String
+  userId       String // Who made the comment (teacher/student)
+  fileName     String? // Which file the comment is on
+  lineNumber   Int? // Line number for inline comments
+  content      String
+  isResolved   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  submission Submission @relation(fields: [submissionId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@map("comments")
+}
+
+// 7. Grades (rubrik breakdown + skor final)
+model Grade {
+  id           String   @id @default(cuid())
+  submissionId String
+  gradedById   String // Teacher who graded
+  gradedUserId String // Student who received grade
+  criterion    String // Rubric criterion name
+  score        Int // Points earned
+  maxScore     Int // Maximum possible points
+  feedback     String? // Feedback for this criterion
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  submission Submission @relation(fields: [submissionId], references: [id])
+  gradedBy   User       @relation("GradedBy", fields: [gradedById], references: [id])
+  gradedUser User       @relation("GradedUser", fields: [gradedUserId], references: [id])
+
+  @@unique([submissionId, criterion])
+  @@map("grades")
+}
+
+// Additional: Audit Log untuk tracking aksi guru & siswa
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String // "upload_submission", "grade_submission", "comment_added", etc.
+  resource  String // "submission", "assignment", "class", etc.
+  resourceId String // ID of the resource
+  metadata  Json? // Additional data
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// Legacy tables to maintain (optional - can be removed later)
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+model Student {
+  id           String    @id @default(cuid())
+  studentId    String    @unique
+  email        String    @unique
+  password     String
+  fullName     String
+  class        String?
+  phone        String?
+  address      String?
+  parentName   String?
+  parentPhone  String?
+  status       String    @default("active")
+  isVerified   Boolean   @default(false)
+  resetToken   String?
+  resetExpires DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("students")
+}

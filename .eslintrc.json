@@ -1,0 +1,10 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "ignorePatterns": ["prisma/**/*"],
+  "rules": {
+    "react/no-unescaped-entities": "error",
+    "@next/next/no-img-element": "warn",
+    "jsx-a11y/alt-text": "warn",
+    "react-hooks/exhaustive-deps": "warn"
+  }
+}
