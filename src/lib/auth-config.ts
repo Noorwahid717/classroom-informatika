@@ -71,7 +71,6 @@ const resolveCookieDomain = () => {
   }
 
   const urlFromEnv = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL
-
   if (!urlFromEnv) {
     return undefined
   }
@@ -122,18 +121,13 @@ export const authOptions: AuthOptionsWithTrustHost = {
         try {
           // Try admin table first
           const admin = await prisma.admin.findUnique({
-            where: {
-              email: credentials.email
-            }
+            where: { email: credentials.email }
           })
 
           // If not found in admin table, try user table with ADMIN role
           if (!admin) {
             const user = await prisma.user.findFirst({
-              where: {
-                email: credentials.email,
-                role: 'ADMIN'
-              }
+              where: { email: credentials.email, role: 'ADMIN' }
             })
 
             if (user) {
@@ -141,10 +135,7 @@ export const authOptions: AuthOptionsWithTrustHost = {
                 credentials.password,
                 user.password || ''
               )
-
-              if (!isPasswordValid) {
-                return null
-              }
+              if (!isPasswordValid) return null
 
               return {
                 id: user.id,
@@ -162,10 +153,8 @@ export const authOptions: AuthOptionsWithTrustHost = {
             credentials.password,
             admin.password
           )
+          if (!isPasswordValid) return null
 
-          if (!isPasswordValid) {
-            return null
-          }
           return {
             id: admin.id,
             email: admin.email,
@@ -193,27 +182,17 @@ export const authOptions: AuthOptionsWithTrustHost = {
         }
 
         const student = await prisma.student.findUnique({
-          where: {
-            studentId: credentials.studentId
-          }
+          where: { studentId: credentials.studentId }
         })
-
-        if (!student || student.status !== 'active') {
-          return null
-        }
+        if (!student || student.status !== 'active') return null
 
         const isPasswordValid = await verifyPassword(
           credentials.password,
           student.password
         )
+        if (!isPasswordValid) return null
 
-        if (!isPasswordValid) {
-          return null
-        }
-
-        // Update last login
-        // Student login successful - no additional update needed
-
+        // Student login successful
         return {
           id: student.id,
           email: student.email,
@@ -228,7 +207,7 @@ export const authOptions: AuthOptionsWithTrustHost = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60 // 30 days
   },
   cookies: {
     sessionToken: {
@@ -272,17 +251,8 @@ export const authOptions: AuthOptionsWithTrustHost = {
       return session
     },
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
-      // If url starts with /, it's a relative path
-      if (url.startsWith('/')) {
-        return `${baseUrl}${url}`
-      }
-      
-      // If url has same origin, allow it
-      if (new URL(url).origin === baseUrl) {
-        return url
-      }
-      
-      // Default to homepage
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      if (new URL(url).origin === baseUrl) return url
       return baseUrl
     }
   }
