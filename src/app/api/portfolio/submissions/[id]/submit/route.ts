@@ -1,8 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/prisma'
-import { PortfolioArtifactType, PortfolioSubmissionStatus } from '@prisma/client'
+import {
+  PortfolioArtifactType,
+  PortfolioSubmissionStatus
+} from '@/lib/portfolio'
 
 export async function POST(
   request: Request,
@@ -15,7 +19,11 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
-  const submission = await prisma.portfolioSubmission.findUnique({
+  // prisma client saat ini belum mengekspos modul portfolio, jadi gunakan cast sementara.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const portfolioDb = prisma as any
+
+  const submission = await portfolioDb.portfolioSubmission.findUnique({
     where: { id },
     include: {
       task: true
@@ -46,7 +54,7 @@ export async function POST(
 
   const lockedAt = new Date()
 
-  const version = await prisma.portfolioVersion.create({
+  const version = await portfolioDb.portfolioVersion.create({
     data: {
       submissionId: submission.id,
       title: submission.title,
@@ -64,7 +72,7 @@ export async function POST(
     }
   })
 
-  const updated = await prisma.portfolioSubmission.update({
+  const updated = await portfolioDb.portfolioSubmission.update({
     where: { id: submission.id },
     data: {
       status: PortfolioSubmissionStatus.SUBMITTED,

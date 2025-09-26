@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, User, GraduationCap } from 'lucide-react'
-import { useToast } from '@/components/ui/Toast'
+import { Toast } from '@/components/ui/Toast'
 
 export default function StudentLoginPage() {
   const [studentId, setStudentId] = useState('')

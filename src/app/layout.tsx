@@ -1,23 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { AppSessionProvider } from "@/components/session-provider";
 import { ToastProvider } from "@/components/ui/Toast";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
   metadataBase: new URL('https://classroom-informatika.vercel.app'),
   title: "Classroom Informatika | SMA Wahidiyah Kediri",
-  description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, preview kode real-time, dan penilaian otomatis untuk SMA Wahidiyah Kediri.",
+  description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, lingkungan kode interaktif berbasis Monaco Editor, dan penilaian otomatis untuk SMA Wahidiyah Kediri.",
   keywords: [
     "Classroom Informatika",
     "SMA Wahidiyah Kediri",
@@ -40,7 +29,7 @@ export const metadata: Metadata = {
     locale: "id_ID",
     url: "https://classroom-informatika.vercel.app",
     title: "Classroom Informatika | SMA Wahidiyah Kediri",
-    description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, preview kode real-time, dan penilaian otomatis",
+    description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, lingkungan kode interaktif berbasis Monaco Editor, dan penilaian otomatis",
     siteName: "Classroom Informatika",
     images: [
       {
@@ -54,7 +43,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Classroom Informatika | SMA Wahidiyah Kediri", 
-    description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, preview kode real-time, dan penilaian otomatis",
+    description: "Sistem penilaian mata pelajaran Informatika dengan upload tugas ZIP, lingkungan kode interaktif berbasis Monaco Editor, dan penilaian otomatis",
     images: ["/og-classroom.jpg"]
   },
   robots: {
@@ -80,9 +69,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className="font-sans antialiased">
         <AppSessionProvider>
           <ToastProvider>
             {children}
