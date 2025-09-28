@@ -1,0 +1,11 @@
+app = "classroom-worker"
+primary_region = "sin"
+
+[build]
+  builder = "heroku/builder:22"
+
+[env]
+  PORT = "8080"
+
+[processes]
+  worker = "node dist/main.js"
