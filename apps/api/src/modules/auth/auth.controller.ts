@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { AuthCredentialsDto, GoogleAuthDto } from "./dto/auth.dto";
 import { JwtAuthGuard } from "../../common/guards/jwt.guard";
-import { Request } from "express";
+import type { FastifyRequest } from "fastify";
 
 @Controller("auth")
 export class AuthController {
@@ -20,9 +20,10 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get("session")
-  async session(@Req() req: Request) {
-    const userId = req.user?.sub as string;
-    const user = await this.auth.getSession(userId);
-    return { user };
+  async session(@Req() req: FastifyRequest) {
+    const requestUser = req.user as { sub?: string } | undefined;
+    const userId = requestUser?.sub as string;
+    const session = await this.auth.getSession(userId);
+    return { user: session };
   }
 }

@@ -10,17 +10,14 @@
       "next-auth"
     ],
     "paths": {
-      "@classroom/ui/*": [
-        "../../packages/ui/src/*"
-      ],
-      "@classroom/config/*": [
-        "../../packages/config/src/*"
-      ],
       "@classroom/api": [
         "../api/src/index.ts"
       ],
       "@classroom/env": [
         "../../packages/config/src/env.ts"
+      ],
+      "@web/config/env": [
+        "./config/env.ts"
       ]
     },
     "allowJs": true,

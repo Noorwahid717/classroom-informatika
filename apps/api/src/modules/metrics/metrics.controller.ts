@@ -1,6 +1,6 @@
 import { Controller, Get, Headers, UseGuards } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
-import { env } from "@classroom/config/env";
+import { env } from "@api/config/env";
 import { JwtAuthGuard } from "../../common/guards/jwt.guard";
 
 @Controller()

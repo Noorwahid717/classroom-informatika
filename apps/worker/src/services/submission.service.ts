@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { SubmissionStatus } from "@prisma/client";
 
 @Injectable()
 export class SubmissionService {
@@ -11,11 +10,11 @@ export class SubmissionService {
   }
 
   async completeEvaluation(submissionId: string, lintResult: unknown, score: number) {
-    await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx: PrismaService) => {
       await tx.submission.update({
         where: { id: submissionId },
         data: {
-          status: SubmissionStatus.GRADED,
+          status: "GRADED",
           lintReport: lintResult,
           score,
           gradedAt: new Date()
@@ -35,7 +34,7 @@ export class SubmissionService {
     });
     await this.prisma.submission.update({
       where: { id: submissionId },
-      data: { status: SubmissionStatus.RETURNED }
+      data: { status: "RETURNED" }
     });
   }
 }

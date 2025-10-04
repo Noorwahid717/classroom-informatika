@@ -3,12 +3,8 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { Button } from "@classroom/ui/button";
-import { Card } from "@classroom/ui/card";
-import { Input } from "@classroom/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@classroom/ui/select";
-import { env } from "@classroom/config/env";
-import { cn } from "@classroom/ui/cn";
+import { env } from "../config/env";
+import { Button, Card, Input } from "./ui/primitives";
 
 const RegistrationSchema = z.object({
   name: z.string().min(3),
@@ -67,54 +63,56 @@ export function RegistrationForm() {
           mutation.mutate(result.data);
         }}
       >
-        <Input
-          label="Nama Lengkap"
-          placeholder="Nama Anda"
-          value={formState.name}
-          onChange={(event) => setFormState((prev) => ({ ...prev, name: event.target.value }))}
-          disabled={isDisabled}
-          required
-        />
-        <Input
-          type="email"
-          label="Email"
-          placeholder="email@domain.com"
-          value={formState.email}
-          onChange={(event) => setFormState((prev) => ({ ...prev, email: event.target.value }))}
-          disabled={isDisabled}
-          required
-        />
-        <Input
-          label="Nomor WhatsApp"
-          placeholder="08xxxxxxxxxx"
-          value={formState.phone}
-          onChange={(event) => setFormState((prev) => ({ ...prev, phone: event.target.value }))}
-          disabled={isDisabled}
-          required
-        />
+        <div className="grid gap-2">
+          <label className="text-sm font-medium">Nama Lengkap</label>
+          <Input
+            placeholder="Nama Anda"
+            value={formState.name}
+            onChange={(event) => setFormState((prev) => ({ ...prev, name: event.target.value }))}
+            disabled={isDisabled}
+            required
+          />
+        </div>
+        <div className="grid gap-2">
+          <label className="text-sm font-medium">Email</label>
+          <Input
+            type="email"
+            placeholder="email@domain.com"
+            value={formState.email}
+            onChange={(event) => setFormState((prev) => ({ ...prev, email: event.target.value }))}
+            disabled={isDisabled}
+            required
+          />
+        </div>
+        <div className="grid gap-2">
+          <label className="text-sm font-medium">Nomor WhatsApp</label>
+          <Input
+            placeholder="08xxxxxxxxxx"
+            value={formState.phone}
+            onChange={(event) => setFormState((prev) => ({ ...prev, phone: event.target.value }))}
+            disabled={isDisabled}
+            required
+          />
+        </div>
         <div className="grid gap-2">
           <label className="text-sm font-medium">Program Pilihan</label>
-          <Select
+          <select
+            className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
             value={formState.programId}
-            onValueChange={(value) => setFormState((prev) => ({ ...prev, programId: value }))}
+            onChange={(event) => setFormState((prev) => ({ ...prev, programId: event.target.value }))}
             disabled={isDisabled}
             required
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih program" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="web">Web Development</SelectItem>
-              <SelectItem value="uiux">UI/UX</SelectItem>
-              <SelectItem value="data">Data Science</SelectItem>
-            </SelectContent>
-          </Select>
+            <option value="" disabled>
+              Pilih program
+            </option>
+            <option value="web">Web Development</option>
+            <option value="uiux">UI/UX</option>
+            <option value="data">Data Science</option>
+          </select>
         </div>
         <textarea
-          className={cn(
-            "min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-            isDisabled && "opacity-60"
-          )}
+          className="min-h-[120px] w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
           placeholder="Ceritakan motivasi Anda"
           value={formState.motivation}
           onChange={(event) => setFormState((prev) => ({ ...prev, motivation: event.target.value }))}

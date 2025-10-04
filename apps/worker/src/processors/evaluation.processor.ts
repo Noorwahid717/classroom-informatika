@@ -2,7 +2,9 @@ import { Processor, WorkerHost, OnWorkerEvent } from "@nestjs/bullmq";
 import { Job } from "bullmq";
 import { SubmissionService } from "../services/submission.service";
 import { lintHtml } from "../services/lint";
+import type { SubmissionContext as LintSubmissionContext } from "../services/lint";
 import { runPlaywright } from "../services/playwright";
+import type { SubmissionContext as PlaywrightSubmissionContext } from "../services/playwright";
 import { evaluateScore } from "../services/scoring";
 
 @Processor("submission-evaluations")
@@ -12,7 +14,12 @@ export class EvaluationProcessor extends WorkerHost {
   }
 
   async process(job: Job<{ submissionId: string }>) {
-    const submission = await this.submissions.getSubmission(job.data.submissionId);
+    const rawSubmission = (await this.submissions.getSubmission(job.data.submissionId)) as Record<string, unknown>;
+    const submission: (LintSubmissionContext & PlaywrightSubmissionContext & { id: string }) = {
+      id: String(rawSubmission.id ?? job.data.submissionId),
+      repositoryUrl: (rawSubmission.repositoryUrl ?? null) as string | null,
+      previewUrl: (rawSubmission.previewUrl ?? null) as string | null
+    };
     const lintResult = await lintHtml(submission);
     const e2eResult = await runPlaywright(submission);
     const score = evaluateScore(lintResult, e2eResult);

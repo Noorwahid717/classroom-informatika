@@ -17,17 +17,15 @@ SQLite file-based database tidak compatible dengan Vercel production (read-only 
 
 Error: `"Unable to open the database file"` terjadi karena:
 - Vercel filesystem adalah read-only
-- SQLite `file:./prod.db` tidak bisa write/create file
-- Perlu database cloud untuk production
-
-### ✅ **Database Solutions:**
+- Connection string `file:./prod.db` mencoba membuka SQLite lokal
+- Production wajib memakai database Postgres yang di-host di cloud
 
 ### ✅ **Database Solutions:**
 
 #### Option 1: Vercel Postgres (Recommended)
 1. Vercel Dashboard → Storage → Create Postgres Database
 2. Copy `POSTGRES_URL` to Environment Variables
-3. Update `DATABASE_URL=postgresql://...` 
+3. Update `DATABASE_URL=postgresql://...`
 4. Redeploy → Auto-migration + seeding
 
 #### Option 2: Supabase (Free)
@@ -59,7 +57,7 @@ NEXTAUTH_SECRET=gema-sma-wahidiyah-super-secret-production-key-2025-kediri
 NEXTAUTH_COOKIE_DOMAIN=landing-page-gema.vercel.app
 
 # Database
-DATABASE_URL=file:./prod.db
+DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
 
 # Admin Credentials  
 ADMIN_EMAIL=admin@smawahidiyah.edu
@@ -120,7 +118,7 @@ vercel --prod
 
 ### 🛠️ Database Notice
 
-**Important:** SQLite (`file:./prod.db`) tidak bekerja di Vercel production karena filesystem read-only.
+**Important:** Gunakan connection string Postgres (mis. Neon, Supabase, Vercel Postgres). Format yang benar: `postgres://...` atau `postgresql://...`. String `file:./prod.db` tidak berlaku di production.
 
 **Untuk production yang proper, gunakan:**
 - **Vercel Postgres** (recommended)

@@ -17,7 +17,7 @@ Redirect login gagal karena environment variables belum di-set di Vercel, khusus
 NEXTAUTH_URL = https://landing-page-gema.vercel.app
 NEXTAUTH_SECRET = gema-sma-wahidiyah-super-secret-production-key-2025-kediri-$(openssl rand -base64 32)
 NEXTAUTH_COOKIE_DOMAIN = landing-page-gema.vercel.app
-DATABASE_URL = file:./prod.db
+DATABASE_URL = postgresql://user:password@host:5432/database?sslmode=require
 ```
 
 #### 📧 Admin Credentials:

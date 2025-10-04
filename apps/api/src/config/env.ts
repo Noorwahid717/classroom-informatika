@@ -1,0 +1,11 @@
+export const env = {
+  INTERNAL_API_KEY: process.env.INTERNAL_API_KEY ?? "",
+  JWT_SECRET: process.env.JWT_SECRET ?? "",
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL ?? "",
+  STORAGE_R2_ACCOUNT_ID: process.env.STORAGE_R2_ACCOUNT_ID ?? "",
+  STORAGE_R2_ACCESS_KEY_ID: process.env.STORAGE_R2_ACCESS_KEY_ID ?? "",
+  STORAGE_R2_SECRET_ACCESS_KEY: process.env.STORAGE_R2_SECRET_ACCESS_KEY ?? "",
+  STORAGE_R2_BUCKET: process.env.STORAGE_R2_BUCKET ?? "",
+  OTEL_EXPORTER_OTLP_ENDPOINT: process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? "",
+  SENTRY_DSN: process.env.SENTRY_DSN ?? ""
+};

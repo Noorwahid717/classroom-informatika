@@ -1,6 +1,6 @@
 import { OnGatewayConnection, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server } from "socket.io";
-import { env } from "@classroom/config/env";
+import { env } from "@api/config/env";
 
 @WebSocketGateway({
   cors: {

@@ -2,14 +2,16 @@ import HTMLHint from "htmlhint";
 import stylelint from "stylelint";
 import { ESLint } from "eslint";
 
-interface SubmissionContext {
+export interface SubmissionContext {
   repositoryUrl: string | null;
 }
 
 export async function lintHtml(submission: SubmissionContext) {
   const htmlResults = HTMLHint.verify("<html></html>", {});
   const cssResults = await stylelint.lint({ code: "body { color: red; }" });
-  const eslint = new ESLint({ useEslintrc: false, baseConfig: { extends: ["eslint:recommended"] } });
+  const eslint = new ESLint({
+    overrideConfig: { extends: ["eslint:recommended"] } as ESLint.Options["overrideConfig"]
+  });
   const jsResults = await eslint.lintText("const a = 1");
   return {
     html: htmlResults,

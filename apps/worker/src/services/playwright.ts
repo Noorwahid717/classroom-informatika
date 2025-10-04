@@ -1,6 +1,6 @@
 import { chromium } from "playwright";
 
-interface SubmissionContext {
+export interface SubmissionContext {
   previewUrl: string | null;
 }
 
