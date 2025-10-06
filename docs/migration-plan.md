@@ -74,11 +74,20 @@
 | `registrations` | `Registration` | Status uppercase |
 
 ### Skrip Migrasi
-1. `pnpm --filter @classroom/scripts exec tsx scripts/export_sqlite.ts`
-2. `pnpm --filter @classroom/scripts exec tsx scripts/transform.ts`
-3. `pnpm --filter @classroom/scripts exec tsx scripts/import_postgres.ts`
-4. `pnpm --filter @classroom/scripts exec tsx scripts/verify_integrity.ts`
-5. `pnpm --filter @classroom/scripts exec tsx scripts/migrate_files_to_r2.ts`
+Sebelum menjalankan transform/import, ekspor data sumber ke `.cache/export` dalam format CSV. Untuk Postgres gunakan contoh perintah
+berikut:
+
+```
+psql "$LEGACY_DATABASE_URL" -c "\\copy users TO '.cache/export/users.csv' CSV HEADER"
+```
+
+Ulangi untuk setiap tabel yang relevan (`classes`, `assignments`, dll.). Setelah direktori `.cache/export` terisi, jalankan pipeline di
+ bawah:
+
+1. `pnpm --filter @classroom/scripts exec tsx scripts/transform.ts`
+2. `pnpm --filter @classroom/scripts exec tsx scripts/import_postgres.ts`
+3. `pnpm --filter @classroom/scripts exec tsx scripts/verify_integrity.ts`
+4. `pnpm --filter @classroom/scripts exec tsx scripts/migrate_files_to_r2.ts`
 
 Semua skrip bersifat idempotent: export/transform menimpa file, import menggunakan `ON CONFLICT DO NOTHING`, upload R2 cek checksum sebelum tulis.
 
@@ -100,7 +109,7 @@ Semua skrip bersifat idempotent: export/transform menimpa file, import menggunak
 1. **Pre-cutover**: Freeze penulisan di database legacy (SQLite), jalankan export→import, verifikasi `scripts/verify_integrity.ts` untuk count & checksum.
 2. **Blue-Green**: Deploy API & worker ke Fly staging, jalankan smoke test `GET /health`, `GET /stats`, enqueue sample job.
 3. **Canary Web**: Gunakan Vercel Preview, 10% traffic via Edge Config sebelum full cutover.
-4. **Data Delta Sync**: Jalankan ulang `export_sqlite.ts` + `transform.ts` untuk data yang masuk saat freeze, gunakan UPSERT di Postgres.
+4. **Data Delta Sync**: Jalankan ulang proses ekspor CSV + `transform.ts` untuk data yang masuk saat freeze, gunakan UPSERT di Postgres.
 5. **DNS switch**: Update CNAME ke Vercel & Fly once verified.
 6. **Rollback**: Jika metrik error >1% atau latensi >1s selama 10 menit, rollback DNS ke lama, restore Postgres dari snapshot terakhir.
 

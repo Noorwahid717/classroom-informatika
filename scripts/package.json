@@ -7,7 +7,6 @@
     "@aws-sdk/lib-storage": "3.614.0",
     "@fast-csv/format": "5.0.0",
     "@fast-csv/parse": "5.0.0",
-    "better-sqlite3": "9.4.1",
     "dotenv": "16.4.5",
     "pg": "8.11.5"
   }
