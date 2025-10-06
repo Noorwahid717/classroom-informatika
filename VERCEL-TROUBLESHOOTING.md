@@ -11,6 +11,10 @@ Admin user belum dibuat di database karena database connection error.
 ### Issue 3: "Unable to open database file"
 SQLite file-based database tidak compatible dengan Vercel production (read-only filesystem).
 
+### Issue 4: "No Next.js version detected"
+Vercel akan membaca `package.json` di root repository untuk menentukan framework. Pastikan dependensi `next` tetap
+terdaftar (dev dependency) di root monorepo sehingga auto-detection berhasil meskipun aplikasi berada di `apps/web`.
+
 ## 🚨 **CRITICAL: Database Issue**
 
 **SQLite tidak bisa digunakan di Vercel production!** 
