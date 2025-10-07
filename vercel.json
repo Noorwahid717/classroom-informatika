@@ -1,6 +1,18 @@
 {
+  "builds": [
+    {
+      "src": "apps/web/next.config.mjs",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "apps/web/$1"
+    }
+  ],
   "functions": {
-    "src/app/api/**/*.ts": {
+    "apps/web/app/api/**/*.ts": {
       "maxDuration": 10
     }
   },
