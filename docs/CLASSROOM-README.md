@@ -1,5 +1,7 @@
 # 🏫 Classroom Informatika - Complete Assessment System
 
+> **Catatan:** Dokumen ini berasal dari implementasi awal GEMA. Status dan fitur akan diperbarui sepanjang proses refactor menuju LMS tertutup untuk kebutuhan kelas.
+
 ## ✅ **PROJECT STATUS: COMPLETED**
 
 **Classroom Informatika** adalah sistem penilaian berbasis web untuk mata pelajaran Informatika di SMA Wahidiyah Kediri. Sistem ini mendukung upload tugas dalam format ZIP (HTML, CSS, JS), preview kode langsung, validasi otomatis, dan sistem penilaian berbasis rubrik.

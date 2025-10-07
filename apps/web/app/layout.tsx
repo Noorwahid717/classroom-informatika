@@ -8,19 +8,19 @@ import { AuthProvider } from "../components/auth-provider";
 import { auth } from "../auth";
 
 export const metadata: Metadata = {
-  title: "GEMA Classroom",
-  description: "Platform pembelajaran generasi muda informatika",
+  title: "Classroom Informatika",
+  description: "Portal pembelajaran internal untuk kelas informatika",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   openGraph: {
-    title: "GEMA Classroom",
-    description: "Platform pembelajaran generasi muda informatika",
+    title: "Classroom Informatika",
+    description: "Portal pembelajaran internal untuk kelas informatika",
     url: process.env.NEXT_PUBLIC_SITE_URL,
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "GEMA Classroom"
+        alt: "Classroom Informatika"
       }
     ]
   }

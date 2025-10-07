@@ -6,7 +6,7 @@ import { getDashboardData } from "../../../server-actions/get-dashboard-data";
 export default async function AdminDashboardPage() {
   const user = await getCurrentUser();
   if (!user || user.role !== "ADMIN") {
-    redirect("/register");
+    redirect("/");
   }
 
   return (

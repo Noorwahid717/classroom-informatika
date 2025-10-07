@@ -1,5 +1,7 @@
 # 🚀 Deployment Guide - Classroom Informatika
 
+> **Catatan:** Panduan ini akan direvisi setelah arsitektur baru (pnpm + Prisma + NextAuth) selesai dipetakan. Gunakan sebagai referensi awal saja.
+
 ## 📋 **Pre-Deployment Checklist**
 
 ### ✅ **Development Complete**

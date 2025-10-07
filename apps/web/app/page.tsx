@@ -1,47 +1,52 @@
 import Link from "next/link";
-import { Suspense } from "react";
-import { LiveStats } from "../components/live-stats";
 
-export default function LandingPage() {
+const actions = [
+  {
+    title: "Masuk sebagai pengajar",
+    description: "Kelola kelas, materi, tugas, dan nilai siswa dalam satu tempat.",
+    href: "/admin/dashboard",
+    cta: "Buka dashboard pengajar"
+  },
+  {
+    title: "Masuk sebagai siswa",
+    description: "Lihat materi kelas, unggah tugas, dan ikuti pengumuman terbaru.",
+    href: "/admin/dashboard",
+    cta: "Buka ruang kelas"
+  }
+];
+
+export default function HomePage() {
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center gap-12 overflow-hidden bg-gradient-to-b from-primary/10 via-background to-background px-6 py-24">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="animate-pulse absolute left-1/2 top-1/2 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-3xl" />
-      </div>
-      <section className="max-w-4xl text-center">
-        <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">Generasi Muda Informatika</p>
-        <h1 className="mt-4 text-4xl font-bold sm:text-6xl">Bangun kompetensi digital dengan kurikulum terkurasi</h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          GEMA Classroom memadukan pembelajaran sinkron dan asinkron dengan sistem penilaian otomatis dan dashboard admin terpadu.
+    <main className="flex min-h-screen flex-col items-center justify-center gap-12 bg-background px-6 py-16">
+      <section className="max-w-3xl text-center">
+        <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">Classroom Informatika</p>
+        <h1 className="mt-4 text-4xl font-bold sm:text-5xl">Portal pembelajaran internal untuk kelas Informatika</h1>
+        <p className="mt-4 text-base text-muted-foreground sm:text-lg">
+          Sistem ini berfokus pada manajemen kelas tertutup: materi, tugas, penilaian, presensi, dan pengumuman hanya dapat diakses oleh
+          guru serta siswa yang terdaftar.
         </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="/register"
-            className="rounded-lg bg-primary px-6 py-3 text-lg font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90"
-          >
-            Daftar Sekarang
-          </Link>
-          <Link
-            href="/admin/dashboard"
-            className="rounded-lg border border-border px-6 py-3 text-lg font-semibold text-foreground shadow-lg transition hover:bg-muted"
-          >
-            Masuk Admin
-          </Link>
-        </div>
       </section>
-      <Suspense fallback={<div className="text-muted-foreground">Memuat statistik...</div>}>
-        <LiveStats />
-      </Suspense>
-      <section className="grid max-w-5xl gap-6 sm:grid-cols-3">
-        {["Workshop mingguan", "Review mentor", "Portfolio digital"].map((feature) => (
-          <div key={feature} className="rounded-xl border border-border bg-card p-6 text-left shadow-sm">
-            <h3 className="text-lg font-semibold text-card-foreground">{feature}</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Terintegrasi langsung dengan modul kelas, tugas, dan penilaian otomatis.
-            </p>
-          </div>
+      <section className="grid w-full max-w-4xl gap-6 sm:grid-cols-2">
+        {actions.map((action) => (
+          <article key={action.title} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-6 text-left shadow-sm">
+            <div className="space-y-3">
+              <h2 className="text-xl font-semibold text-card-foreground">{action.title}</h2>
+              <p className="text-sm text-muted-foreground">{action.description}</p>
+            </div>
+            <div className="mt-6">
+              <Link
+                href={action.href}
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+              >
+                {action.cta}
+              </Link>
+            </div>
+          </article>
         ))}
       </section>
+      <p className="max-w-2xl text-center text-xs text-muted-foreground sm:text-sm">
+        Hubungi admin teknis untuk mendapatkan akun pengajar atau undangan kelas. Semua aktivitas dicatat untuk kebutuhan audit internal.
+      </p>
     </main>
   );
 }
