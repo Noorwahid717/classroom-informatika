@@ -1,14 +1,14 @@
 {
   "builds": [
     {
-      "src": "apps/web/next.config.mjs",
+      "src": "apps/web/package.json",
       "use": "@vercel/next"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "apps/web/$1"
+      "source": "/(.*)",
+      "destination": "/apps/web/$1"
     }
   ],
   "functions": {
@@ -16,7 +16,8 @@
       "maxDuration": 10
     }
   },
-  "public": true,
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter web build",
   "github": {
     "silent": true
   }

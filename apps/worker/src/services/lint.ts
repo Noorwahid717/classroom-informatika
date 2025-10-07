@@ -6,7 +6,7 @@ export interface SubmissionContext {
   repositoryUrl: string | null;
 }
 
-export async function lintHtml(submission: SubmissionContext) {
+export async function lintHtml(_submission: SubmissionContext) {
   const htmlResults = HTMLHint.verify("<html></html>", {});
   const cssResults = await stylelint.lint({ code: "body { color: red; }" });
   const eslint = new ESLint({
