@@ -1,6 +1,6 @@
 import { INestApplication } from "@nestjs/common";
 import * as Sentry from "@sentry/node";
-import { env } from "@classroom/config/env";
+import { env } from "@api/config/env";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 
@@ -9,8 +9,6 @@ let sdk: NodeSDK | undefined;
 export function setupOpenTelemetry(app: INestApplication) {
   if (!env.OTEL_EXPORTER_OTLP_ENDPOINT) return;
   sdk = new NodeSDK({
-    serviceName: "classroom-api",
-    endpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
     instrumentations: [getNodeAutoInstrumentations()]
   });
   void sdk.start();

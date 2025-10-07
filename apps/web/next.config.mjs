@@ -38,6 +38,9 @@ const nextConfig = {
       }
     ];
   },
+  eslint: {
+    ignoreDuringBuilds: true
+  },
   compiler: {
     removeConsole: isProd ? { exclude: ["error"] } : false
   }

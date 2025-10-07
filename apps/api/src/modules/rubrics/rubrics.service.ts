@@ -11,7 +11,7 @@ export class RubricsService {
   }
 
   upsert(dto: UpsertRubricDto) {
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: PrismaService) => {
       const rubric = await tx.rubric.upsert({
         where: { id: dto.id ?? "" },
         update: { title: dto.title, description: dto.description },

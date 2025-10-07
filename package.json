@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.12.0",
   "scripts": {
-    "build": "turbo build",
+    "build": "NEXT_IGNORE_INCORRECT_LOCKFILE=1 turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "test": "turbo test",
@@ -17,6 +17,7 @@
     "eslint": "8.57.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-import": "2.29.1",
+    "next": "14.2.5",
     "prettier": "3.3.3",
     "turbo": "2.1.1",
     "typescript": "5.4.5"

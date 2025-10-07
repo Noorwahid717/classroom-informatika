@@ -1,7 +1,7 @@
 "use server";
 
 import "server-only";
-import { env } from "@classroom/config/env";
+import { env } from "../config/env";
 import { z } from "zod";
 import { auth } from "../auth";
 
@@ -39,7 +39,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     throw new Error("Failed to load dashboard data");
   }
 
-  const json = await response.json();
+  const json = (await response.json()) as unknown;
   const parsed = DashboardSchema.safeParse(json);
   if (!parsed.success) {
     throw parsed.error;

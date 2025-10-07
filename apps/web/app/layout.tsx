@@ -3,7 +3,7 @@ import "../styles/globals.css";
 import type { Metadata } from "next";
 import { ReactQueryProvider } from "../components/react-query-provider";
 import { ThemeProvider } from "../components/theme-provider";
-import { Toaster } from "@classroom/ui/toaster";
+import { Toaster } from "../components/ui/toaster";
 import { AuthProvider } from "../components/auth-provider";
 import { auth } from "../auth";
 

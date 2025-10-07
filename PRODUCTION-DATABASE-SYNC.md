@@ -1,11 +1,13 @@
 # Production-Local Database Sync Issue 🚨
 
+> **Catatan:** Dokumen ini merangkum insiden historis ketika deployment production masih memakai SQLite. Pastikan sekarang `DATABASE_URL` sudah mengarah ke PostgreSQL agar masalah tidak terulang.
+
 ## Problem Statement
 User correctly identified: **Local dan production menggunakan database yang sama (Neon PostgreSQL), jadi seharusnya datanya juga sama.**
 
 ## Current Status
 - ✅ **Local:** PostgreSQL working, data seeded, `admin123` credentials work
-- ❌ **Production:** Still using SQLite schema, shows empty data
+- ❌ **Production (sebelumnya):** Masih menggunakan schema SQLite sehingga data kosong
 
 ## Root Cause Analysis
 

@@ -4,7 +4,7 @@ import { CreateAssignmentDto, UpdateAssignmentDto } from "./dto/assignment.dto";
 import { JwtAuthGuard } from "../../common/guards/jwt.guard";
 import { Roles } from "../../common/decorators/roles.decorator";
 import { RolesGuard } from "../../common/guards/roles.guard";
-import { Role } from "@prisma/client";
+import { Role } from "@api/constants/prisma";
 
 @Controller("assignments")
 export class AssignmentsController {

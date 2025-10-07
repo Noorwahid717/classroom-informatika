@@ -26,7 +26,7 @@ Website resmi program GEMA (Generasi Muda Informatika) SMA Wahidiyah Kediri yang
 
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Styling**: Tailwind CSS 4
-- **Database**: SQLite + Prisma ORM
+- **Database**: PostgreSQL (Neon) + Prisma ORM
 - **Authentication**: NextAuth.js dengan Credentials Provider
 - **Animation**: Framer Motion
 - **Icons**: Lucide React

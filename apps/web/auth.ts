@@ -3,7 +3,7 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
 import type { Session } from "next-auth";
-import { env } from "@classroom/config/env";
+import { env } from "./config/env";
 import { z } from "zod";
 
 const SessionUserSchema = z.object({
@@ -16,10 +16,16 @@ const SessionUserSchema = z.object({
 
 type SessionUser = z.infer<typeof SessionUserSchema>;
 
-type TokenExchange = {
-  accessToken: string;
-  refreshToken: string;
-};
+const SessionResponseSchema = z.object({
+  user: SessionUserSchema
+});
+
+const TokenExchangeSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string()
+});
+
+type TokenExchange = z.infer<typeof TokenExchangeSchema>;
 
 async function fetchSessionUser(accessToken: string): Promise<SessionUser> {
   const response = await fetch(`${env.API_BASE_URL}/auth/session`, {
@@ -31,12 +37,12 @@ async function fetchSessionUser(accessToken: string): Promise<SessionUser> {
   if (!response.ok) {
     throw new Error(`Unable to load session: ${response.status}`);
   }
-  const json = await response.json();
-  const parsed = SessionUserSchema.safeParse(json.user);
+  const json = (await response.json()) as unknown;
+  const parsed = SessionResponseSchema.safeParse(json);
   if (!parsed.success) {
     throw new Error("Session payload invalid");
   }
-  return parsed.data;
+  return parsed.data.user;
 }
 
 async function exchangeGoogleToken(params: { accountId: string; email?: string | null; name?: string | null; avatarUrl?: string | null }): Promise<TokenExchange> {
@@ -58,7 +64,12 @@ async function exchangeGoogleToken(params: { accountId: string; email?: string |
   if (!response.ok) {
     throw new Error("Failed to exchange Google token");
   }
-  return response.json();
+  const json = (await response.json()) as unknown;
+  const parsed = TokenExchangeSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new Error("Google token exchange payload invalid");
+  }
+  return parsed.data;
 }
 
 async function exchangeCredentials(params: { email: string; password: string }): Promise<TokenExchange> {
@@ -72,7 +83,12 @@ async function exchangeCredentials(params: { email: string; password: string }):
   if (!response.ok) {
     throw new Error("Invalid email atau password");
   }
-  return response.json();
+  const json = (await response.json()) as unknown;
+  const parsed = TokenExchangeSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new Error("Credential exchange payload invalid");
+  }
+  return parsed.data;
 }
 
 type ExtendedToken = JWT & { user?: SessionUser; accessToken?: string; refreshToken?: string };
@@ -116,7 +132,7 @@ export const {
       async authorize(credentials) {
         const email = credentials?.email;
         const password = credentials?.password;
-        if (!email || !password) {
+        if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
           return null;
         }
         try {

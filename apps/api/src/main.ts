@@ -5,7 +5,7 @@ import helmet from "fastify-helmet";
 import rateLimit from "fastify-rate-limit";
 import multipart from "@fastify/multipart";
 import { AppModule } from "./app.module";
-import { env } from "@classroom/config/env";
+import { env } from "@api/config/env";
 import { instrumentNestJS, setupOpenTelemetry } from "./observability";
 
 async function bootstrap() {

@@ -5,8 +5,8 @@
 | --- | --- | --- | --- |
 | Landing page & hero statistik | Redirect otomatis berdasarkan role, fitur upload tugas & Monaco editor | `src/app/page.tsx` | Mengandalkan NextAuth session & fitur lint otomatis di FE 【F:src/app/page.tsx†L1-L88】 |
 | Admin dashboard | Pengelolaan pendaftaran, pengumuman, galeri, kegiatan | `src/app/dashboard` | Role ADMIN/SUPER_ADMIN dari NextAuth 【F:README.md†L15-L24】 |
-| Auth | NextAuth Credentials Provider, login modal | `src/components/LoginModal.tsx`, `src/pages/api/auth/[...nextauth].ts` | Password tersimpan di SQLite 【F:README.md†L34-L44】 |
-| Database | Prisma schema dengan tabel users, classes, assignments, submissions, dll | `prisma/schema.prisma` | Saat ini menggunakan SQLite lokal |
+| Auth | NextAuth Credentials Provider, login modal | `src/components/LoginModal.tsx`, `src/pages/api/auth/[...nextauth].ts` | Password kini tersimpan di PostgreSQL hasil migrasi dari SQLite 【F:README.md†L29-L36】 |
+| Database | Prisma schema dengan tabel users, classes, assignments, submissions, dll | `prisma/schema.prisma` | Sudah menggunakan PostgreSQL managed (Neon) |
 | Deployment | Skrip Vercel dan shell helper | `VERCEL_DEPLOYMENT.md`, `setup-vercel-env.sh` | Fokus single repo Next.js |
 
 ## 2. Rencana Fase Migrasi
@@ -63,7 +63,7 @@
 | Auth credentials | `apps/api/src/modules/auth` + Auth.js | POST `/auth/login`, `/auth/google`, GET `/auth/session` | Rehash on login bila flag `needsPasswordRehash` true 【F:apps/api/src/modules/auth/auth.service.ts†L1-L49】 |
 
 ## 5. Pemetaan Data & ETL
-| Entitas SQLite | PostgreSQL | Transformasi |
+| Entitas Legacy SQLite | PostgreSQL | Transformasi |
 | --- | --- | --- |
 | `users` | `User` | Normalisasi role uppercase, field `needsPasswordRehash` true untuk record dengan password lama |
 | `classes` | `Classroom`, `ClassMember` | Owner jadi `Classroom.ownerId`, peserta `ClassMember` |
@@ -74,11 +74,20 @@
 | `registrations` | `Registration` | Status uppercase |
 
 ### Skrip Migrasi
-1. `pnpm --filter @classroom/scripts exec tsx scripts/export_sqlite.ts`
-2. `pnpm --filter @classroom/scripts exec tsx scripts/transform.ts`
-3. `pnpm --filter @classroom/scripts exec tsx scripts/import_postgres.ts`
-4. `pnpm --filter @classroom/scripts exec tsx scripts/verify_integrity.ts`
-5. `pnpm --filter @classroom/scripts exec tsx scripts/migrate_files_to_r2.ts`
+Sebelum menjalankan transform/import, ekspor data sumber ke `.cache/export` dalam format CSV. Untuk Postgres gunakan contoh perintah
+berikut:
+
+```
+psql "$LEGACY_DATABASE_URL" -c "\\copy users TO '.cache/export/users.csv' CSV HEADER"
+```
+
+Ulangi untuk setiap tabel yang relevan (`classes`, `assignments`, dll.). Setelah direktori `.cache/export` terisi, jalankan pipeline di
+ bawah:
+
+1. `pnpm --filter @classroom/scripts exec tsx scripts/transform.ts`
+2. `pnpm --filter @classroom/scripts exec tsx scripts/import_postgres.ts`
+3. `pnpm --filter @classroom/scripts exec tsx scripts/verify_integrity.ts`
+4. `pnpm --filter @classroom/scripts exec tsx scripts/migrate_files_to_r2.ts`
 
 Semua skrip bersifat idempotent: export/transform menimpa file, import menggunakan `ON CONFLICT DO NOTHING`, upload R2 cek checksum sebelum tulis.
 
@@ -97,10 +106,10 @@ Semua skrip bersifat idempotent: export/transform menimpa file, import menggunak
 - OTEL NodeSDK opsional melalui env `OTEL_EXPORTER_OTLP_ENDPOINT`.
 
 ## 8. Strategi Cutover & Rollback
-1. **Pre-cutover**: Freeze penulisan di SQLite, jalankan export→import, verifikasi `scripts/verify_integrity.ts` untuk count & checksum.
+1. **Pre-cutover**: Freeze penulisan di database legacy (SQLite), jalankan export→import, verifikasi `scripts/verify_integrity.ts` untuk count & checksum.
 2. **Blue-Green**: Deploy API & worker ke Fly staging, jalankan smoke test `GET /health`, `GET /stats`, enqueue sample job.
 3. **Canary Web**: Gunakan Vercel Preview, 10% traffic via Edge Config sebelum full cutover.
-4. **Data Delta Sync**: Jalankan ulang `export_sqlite.ts` + `transform.ts` untuk data yang masuk saat freeze, gunakan UPSERT di Postgres.
+4. **Data Delta Sync**: Jalankan ulang proses ekspor CSV + `transform.ts` untuk data yang masuk saat freeze, gunakan UPSERT di Postgres.
 5. **DNS switch**: Update CNAME ke Vercel & Fly once verified.
 6. **Rollback**: Jika metrik error >1% atau latensi >1s selama 10 menit, rollback DNS ke lama, restore Postgres dari snapshot terakhir.
 

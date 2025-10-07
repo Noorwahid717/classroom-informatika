@@ -6,7 +6,7 @@
 - [x] Next.js 15 dengan App Router ✅
 - [x] TypeScript configuration ✅
 - [x] Tailwind CSS 4 ✅
-- [x] Prisma ORM dengan SQLite ✅
+- [x] Prisma ORM dengan PostgreSQL ✅
 - [x] NextAuth.js authentication ✅
 - [x] Real-time chat system ✅
 - [x] Admin dashboard ✅
@@ -36,7 +36,7 @@
    ```bash
    NEXTAUTH_SECRET=your-super-secret-production-key
    NEXTAUTH_URL=https://your-app-name.vercel.app
-   DATABASE_URL=file:./prod.db
+   DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
    ADMIN_EMAIL=admin@smawahidiyah.edu
    ADMIN_PASSWORD=secure-admin-password
    ```
@@ -77,8 +77,8 @@ NEXTAUTH_SECRET="your-super-secret-production-key-32-chars-min"
 NEXTAUTH_URL="https://your-app-name.vercel.app"
 NEXT_PUBLIC_SITE_URL="https://your-app-name.vercel.app"
 
-# Database (Vercel will handle file system)
-DATABASE_URL="file:./prod.db"
+# Database (managed Postgres, e.g. Neon/Supabase/Railway)
+DATABASE_URL="postgresql://user:password@host:5432/database?sslmode=require"
 
 # Admin Credentials
 ADMIN_EMAIL="admin@smawahidiyah.edu"

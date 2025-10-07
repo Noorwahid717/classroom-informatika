@@ -9,8 +9,16 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
-    "baseUrl": "./src"
+    "baseUrl": "./src",
+    "paths": {
+      "@classroom/config": ["../../packages/config/src/index.ts"],
+      "@classroom/config/*": ["../../packages/config/src/*"],
+      "@classroom/config/env": ["../../packages/config/src/env.ts"],
+      "@api/constants/prisma": ["./constants/prisma.ts"],
+      "@api/security/jwt": ["./security/jwt.service.ts"],
+      "@api/config/env": ["./config/env.ts"]
+    }
   },
-  "include": ["src/**/*", "../**/*.d.ts"],
+  "include": ["src/**/*", "src/types/**/*.d.ts", "../**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

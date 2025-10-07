@@ -1,6 +1,6 @@
 "use server";
 
-import { env } from "@classroom/config/env";
+import { env } from "../config/env";
 import { z } from "zod";
 import { auth } from "../auth";
 
@@ -12,6 +12,10 @@ const UserSchema = z.object({
 });
 
 export type CurrentUser = z.infer<typeof UserSchema>;
+
+const SessionResponseSchema = z.object({
+  user: UserSchema
+});
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const session = await auth();
@@ -30,7 +34,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     return null;
   }
 
-  const json = await response.json();
-  const parsed = UserSchema.safeParse(json.user);
-  return parsed.success ? parsed.data : null;
+  const json = (await response.json()) as unknown;
+  const parsed = SessionResponseSchema.safeParse(json);
+  return parsed.success ? parsed.data.user : null;
 }

@@ -3,8 +3,8 @@ import { FilesService } from "./files.service";
 import { JwtAuthGuard } from "../../common/guards/jwt.guard";
 import { RolesGuard } from "../../common/guards/roles.guard";
 import { Roles } from "../../common/decorators/roles.decorator";
-import { Role } from "@prisma/client";
-import { FileFastifyInterceptor } from "@nestjs/platform-fastify";
+import { Role } from "@api/constants/prisma";
+import { FastifyFileInterceptor } from "../../common/interceptors/file.interceptor";
 import type { FastifyRequest } from "fastify";
 import type { FastifyFile } from "@fastify/multipart";
 
@@ -15,7 +15,7 @@ export class FilesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.STUDENT, Role.MENTOR, Role.ADMIN)
   @Post("submissions/:id/archive")
-  @UseInterceptors(FileFastifyInterceptor("file"))
+  @UseInterceptors(FastifyFileInterceptor())
   uploadSubmissionArchive(
     @Param("id") submissionId: string,
     @UploadedFile() file: FastifyFile,

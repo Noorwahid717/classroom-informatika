@@ -1,8 +1,8 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../prisma/prisma.service";
 import type { FastifyFile } from "@fastify/multipart";
-import { Role, SubmissionStatus } from "@prisma/client";
-import { env } from "@classroom/config/env";
+import { Role, SubmissionStatus } from "@api/constants/prisma";
+import { env } from "@api/config/env";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { createHash } from "node:crypto";
 import JSZip from "jszip";
@@ -70,7 +70,7 @@ export class FilesService {
       })
     );
 
-    const asset = await this.prisma.$transaction(async (tx) => {
+    const asset = await this.prisma.$transaction(async (tx: PrismaService) => {
       const createdAsset = await tx.fileAsset.create({
         data: {
           category: "SUBMISSION",

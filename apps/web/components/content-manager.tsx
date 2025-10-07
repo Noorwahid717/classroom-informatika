@@ -3,11 +3,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { Button } from "@classroom/ui/button";
-import { Card } from "@classroom/ui/card";
-import { Input } from "@classroom/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@classroom/ui/tabs";
-import { env } from "@classroom/config/env";
+import { Button, Card, Input } from "./ui/primitives";
+import { env } from "../config/env";
 import { z } from "zod";
 import { signIn, useSession } from "next-auth/react";
 
@@ -41,6 +38,7 @@ async function fetchContents(accessToken: string): Promise<Content[]> {
 export function ContentManager() {
   const { data: session, status } = useSession();
   const [activeContent, setActiveContent] = useState<EditableContent | null>(null);
+  const [activeTab, setActiveTab] = useState<"list" | "editor">("list");
   const accessToken = session?.accessToken;
   const contents = useQuery({
     queryKey: ["content"],
@@ -92,18 +90,30 @@ export function ContentManager() {
           <h1 className="text-3xl font-semibold">Manajemen Konten</h1>
           <p className="text-sm text-muted-foreground">Kelola pengumuman, kegiatan, dan materi landing page.</p>
         </div>
-        <Button onClick={() => setActiveContent({ id: undefined, title: "", slug: "", body: "", published: false })}>
+        <Button
+          onClick={() => {
+            setActiveContent({ id: undefined, title: "", slug: "", body: "", published: false });
+            setActiveTab("editor");
+          }}
+        >
           Konten Baru
         </Button>
       </div>
-      <Tabs defaultValue="list" className="grid gap-6" orientation="horizontal">
-        <TabsList>
-          <TabsTrigger value="list">Daftar</TabsTrigger>
-          <TabsTrigger value="editor" disabled={!activeContent}>
-            Editor
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="list" className="grid gap-4">
+      <div className="flex gap-2">
+        <Button type="button" onClick={() => setActiveTab("list")} className={activeTab === "list" ? "bg-gray-100" : ""}>
+          Daftar
+        </Button>
+        <Button
+          type="button"
+          onClick={() => setActiveTab("editor")}
+          disabled={!activeContent}
+          className={activeTab === "editor" ? "bg-gray-100" : ""}
+        >
+          Editor
+        </Button>
+      </div>
+      {activeTab === "list" ? (
+        <div className="grid gap-4">
           {contents.isLoading ? (
             <p className="text-sm text-muted-foreground">Memuat konten...</p>
           ) : contents.isError ? (
@@ -129,44 +139,42 @@ export function ContentManager() {
               </Card>
             ))
           )}
-        </TabsContent>
-        <TabsContent value="editor">
-          {activeContent ? (
-            <Card className="space-y-4 p-6">
-              <Input
-                placeholder="Judul"
-                value={activeContent.title ?? ""}
-                onChange={(event) => setActiveContent({ ...activeContent, title: event.target.value })}
-              />
-              <Input
-                placeholder="Slug"
-                value={activeContent.slug ?? ""}
-                onChange={(event) => setActiveContent({ ...activeContent, slug: event.target.value })}
-              />
-              <MonacoEditor
-                height="400px"
-                defaultLanguage="markdown"
-                value={activeContent.body ?? ""}
-                onChange={(value) => setActiveContent({ ...activeContent, body: value ?? "" })}
-                options={{ minimap: { enabled: false } }}
-              />
-              <Button
-                onClick={() =>
-                  mutation.mutate({
-                    id: activeContent.id,
-                    title: activeContent.title ?? "",
-                    slug: activeContent.slug ?? "",
-                    body: activeContent.body ?? "",
-                    published: activeContent.published ?? false
-                  })
-                }
-              >
-                Simpan
-              </Button>
-            </Card>
-          ) : null}
-        </TabsContent>
-      </Tabs>
+        </div>
+      ) : null}
+      {activeTab === "editor" && activeContent ? (
+        <Card className="space-y-4 p-6">
+          <Input
+            placeholder="Judul"
+            value={activeContent.title ?? ""}
+            onChange={(event) => setActiveContent({ ...activeContent, title: event.target.value })}
+          />
+          <Input
+            placeholder="Slug"
+            value={activeContent.slug ?? ""}
+            onChange={(event) => setActiveContent({ ...activeContent, slug: event.target.value })}
+          />
+          <MonacoEditor
+            height="400px"
+            defaultLanguage="markdown"
+            value={activeContent.body ?? ""}
+            onChange={(value) => setActiveContent({ ...activeContent, body: value ?? "" })}
+            options={{ minimap: { enabled: false } }}
+          />
+          <Button
+            onClick={() =>
+              mutation.mutate({
+                id: activeContent.id,
+                title: activeContent.title ?? "",
+                slug: activeContent.slug ?? "",
+                body: activeContent.body ?? "",
+                published: activeContent.published ?? false
+              })
+            }
+          >
+            Simpan
+          </Button>
+        </Card>
+      ) : null}
     </div>
   );
 }

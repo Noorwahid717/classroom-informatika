@@ -1,5 +1,5 @@
 import type { Config } from "tailwindcss";
-import sharedPreset from "@classroom/config/tailwind";
+import sharedPreset from "./config/tailwind-preset";
 
 const config: Config = {
   presets: [sharedPreset],

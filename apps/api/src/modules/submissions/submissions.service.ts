@@ -7,7 +7,7 @@ import {
 import { PrismaService } from "../../prisma/prisma.service";
 import { CreateSubmissionDto } from "./dto/create-submission.dto";
 import { UpdateSubmissionDto } from "./dto/update-submission.dto";
-import { Role, SubmissionStatus } from "@prisma/client";
+import { Role, SubmissionStatus } from "@api/constants/prisma";
 
 @Injectable()
 export class SubmissionsService {

@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { Button } from "@classroom/ui/button";
-import { Spotlight } from "@classroom/ui/spotlight";
 import { Suspense } from "react";
 import { LiveStats } from "../components/live-stats";
 
 export default function LandingPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-12 bg-gradient-to-b from-primary/10 via-background to-background px-6 py-24">
-      <Spotlight />
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-12 overflow-hidden bg-gradient-to-b from-primary/10 via-background to-background px-6 py-24">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="animate-pulse absolute left-1/2 top-1/2 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-3xl" />
+      </div>
       <section className="max-w-4xl text-center">
         <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">Generasi Muda Informatika</p>
         <h1 className="mt-4 text-4xl font-bold sm:text-6xl">Bangun kompetensi digital dengan kurikulum terkurasi</h1>
@@ -15,12 +15,18 @@ export default function LandingPage() {
           GEMA Classroom memadukan pembelajaran sinkron dan asinkron dengan sistem penilaian otomatis dan dashboard admin terpadu.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-          <Button asChild size="lg">
-            <Link href="/register">Daftar Sekarang</Link>
-          </Button>
-          <Button asChild variant="outline" size="lg">
-            <Link href="/admin/dashboard">Masuk Admin</Link>
-          </Button>
+          <Link
+            href="/register"
+            className="rounded-lg bg-primary px-6 py-3 text-lg font-semibold text-primary-foreground shadow-lg transition hover:bg-primary/90"
+          >
+            Daftar Sekarang
+          </Link>
+          <Link
+            href="/admin/dashboard"
+            className="rounded-lg border border-border px-6 py-3 text-lg font-semibold text-foreground shadow-lg transition hover:bg-muted"
+          >
+            Masuk Admin
+          </Link>
         </div>
       </section>
       <Suspense fallback={<div className="text-muted-foreground">Memuat statistik...</div>}>

@@ -12,9 +12,9 @@ vercel env add NEXTAUTH_URL production
 vercel env add NEXTAUTH_SECRET production
 # Enter: gema-sma-wahidiyah-super-secret-production-key-2025-kediri
 
-# Database URL (untuk development/preview - production perlu database real)
+# Database URL (gunakan Postgres managed seperti Neon/Supabase)
 vercel env add DATABASE_URL production
-# Enter: file:./prod.db
+# Enter: postgresql://user:password@host:5432/database?sslmode=require
 
 # Admin Credentials
 vercel env add ADMIN_EMAIL production

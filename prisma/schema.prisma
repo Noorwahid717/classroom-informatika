@@ -59,6 +59,7 @@ model User {
   gradesReceived Grade[]            @relation("GradeStudent")
   registrations  Registration[]
   auditLogs      AuditLog[]
+  announcements  Announcement[]
   refreshTokens  RefreshToken[]
 }
 

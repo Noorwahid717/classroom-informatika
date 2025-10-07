@@ -10,7 +10,13 @@ export const env = createEnv({
     NEXTAUTH_SECRET: z.string().optional(),
     NEXTAUTH_URL: z.string().url().optional(),
     JWT_SECRET: z.string().min(16),
-    DATABASE_URL: z.string(),
+    DATABASE_URL: z
+      .string()
+      .url()
+      .refine(
+        (value) => value.startsWith("postgres://") || value.startsWith("postgresql://"),
+        "DATABASE_URL must use the PostgreSQL connection protocol"
+      ),
     REDIS_URL: z.string().url(),
     SENTRY_DSN: z.string().url().optional(),
     STORAGE_R2_ACCOUNT_ID: z.string(),
