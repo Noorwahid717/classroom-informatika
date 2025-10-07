@@ -1,10 +1,23 @@
 {
+  "builds": [
+    {
+      "src": "apps/web/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/apps/web/$1"
+    }
+  ],
   "functions": {
-    "src/app/api/**/*.ts": {
+    "apps/web/app/api/**/*.ts": {
       "maxDuration": 10
     }
   },
-  "public": true,
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm --filter web build",
   "github": {
     "silent": true
   }

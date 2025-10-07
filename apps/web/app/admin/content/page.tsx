@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 export default async function ContentPage() {
   const user = await getCurrentUser();
   if (!user || (user.role !== "ADMIN" && user.role !== "MENTOR")) {
-    redirect("/register");
+    redirect("/");
   }
 
   return (
