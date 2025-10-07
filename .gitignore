@@ -19,6 +19,7 @@ yarn-error.log*
 # Output and coverage
 out/
 coverage/
+.turbo/
 
 # Uploads (custom)
 uploads/

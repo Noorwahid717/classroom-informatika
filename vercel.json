@@ -17,7 +17,7 @@
     }
   },
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter web build",
+  "buildCommand": "pnpm --filter web build && rm -rf .next && cp -R apps/web/.next .next",
   "github": {
     "silent": true
   }
