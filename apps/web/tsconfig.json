@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "jsx": "preserve",
     "types": [
       "@types/node",
@@ -10,6 +11,12 @@
       "next-auth"
     ],
     "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@/auth": [
+        "./auth"
+      ],
       "@classroom/api": [
         "../api/src/index.ts"
       ],
@@ -32,6 +39,7 @@
   },
   "include": [
     "next-env.d.ts",
+    "../auth.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
