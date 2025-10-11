@@ -21,7 +21,7 @@ export default function SimpleTeacherDashboard() {
     )
   }
 
-  if (!session) {
+  if (!session?.user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -32,6 +32,9 @@ export default function SimpleTeacherDashboard() {
     )
   }
 
+  const user = session.user
+  const userType = (user as { userType?: string }).userType ?? 'N/A'
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -39,10 +42,10 @@ export default function SimpleTeacherDashboard() {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Welcome, {session.user.name}!</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Welcome, {user.name ?? 'Teacher'}!</h1>
               <p className="text-gray-600 mt-2">Teacher Dashboard - GEMA Classroom</p>
               <p className="text-sm text-gray-500 mt-1">
-                Role: {session.user.role} | Email: {session.user.email}
+                Role: {user.role} | Email: {user.email}
               </p>
             </div>
             <div className="text-right">
@@ -130,10 +133,10 @@ export default function SimpleTeacherDashboard() {
                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <h4 className="font-medium text-blue-800 mb-2">📝 Session Info</h4>
                   <div className="text-sm text-blue-700 space-y-1">
-                    <p><strong>Name:</strong> {session.user.name}</p>
-                    <p><strong>Email:</strong> {session.user.email}</p>
-                    <p><strong>Role:</strong> {session.user.role}</p>
-                    <p><strong>User Type:</strong> {session.user.userType}</p>
+                    <p><strong>Name:</strong> {user.name ?? 'Unknown'}</p>
+                    <p><strong>Email:</strong> {user.email}</p>
+                    <p><strong>Role:</strong> {user.role}</p>
+                    <p><strong>User Type:</strong> {userType}</p>
                   </div>
                 </div>
               </div>

@@ -145,14 +145,22 @@ export default function GradingInterface({
   }
 
   const handleRubricScoreChange = (criterionId: string, field: 'score' | 'feedback', value: string | number) => {
-    setRubricScores(prev => ({
-      ...prev,
-      [criterionId]: {
-        ...prev[criterionId],
-        criterionId,
-        [field]: value
+    setRubricScores(prev => {
+      const previous = prev[criterionId] ?? { criterionId, score: 0, feedback: '' }
+      const updated: RubricScore = { ...previous, criterionId }
+
+      if (field === 'score') {
+        const numericValue = typeof value === 'number' ? value : Number(value)
+        updated.score = Number.isFinite(numericValue) ? numericValue : 0
+      } else {
+        updated.feedback = typeof value === 'string' ? value : String(value)
       }
-    }))
+
+      return {
+        ...prev,
+        [criterionId]: updated
+      }
+    })
   }
 
   const calculateTotalScore = (): { score: number; maxScore: number } => {

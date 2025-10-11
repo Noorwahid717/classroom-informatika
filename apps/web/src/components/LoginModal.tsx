@@ -118,7 +118,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </DialogHeader>
 
         <div className="p-6">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "student" | "admin")} className="w-full">
+          <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as "student" | "admin")} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="student" className="flex items-center space-x-2">
                 <GraduationCap className="h-4 w-4" />

@@ -27,12 +27,13 @@ export default function Home() {
 
   useEffect(() => {
     // Redirect authenticated users to their appropriate dashboard
-    if (session) {
-      if (session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') {
-        router.push('/dashboard/teacher')
-      } else if (session.user.role === 'STUDENT') {
-        router.push('/dashboard/student')
-      }
+    const role = session?.user?.role
+    if (!role) return
+
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+      router.push('/dashboard/teacher')
+    } else if (role === 'STUDENT') {
+      router.push('/dashboard/student')
     }
   }, [session, router])
 

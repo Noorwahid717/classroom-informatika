@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import JSZip from 'jszip'
+import type { JSZipFile } from 'jszip'
 import { promises as fs } from 'fs'
 import path from 'path'
 import {
@@ -73,7 +74,7 @@ export async function POST(
 
       const entryPromises: Promise<void>[] = []
 
-      zip.forEach((relativePath, zipEntry) => {
+      zip.forEach((relativePath: string, zipEntry: JSZipFile) => {
         if (zipEntry.dir) return
 
         const sanitizedPath = relativePath.replace(/\\+/g, '/').replace(/^\//, '')
@@ -86,32 +87,27 @@ export async function POST(
           throw new Error(`File non-statis terdeteksi: ${sanitizedPath}`)
         }
 
-        const entryMeta = zipEntry as unknown as {
-          uncompressedSize?: number
-          _data?: { uncompressedSize?: number }
-        }
-
         entries.push({
           path: sanitizedPath,
-          size: entryMeta.uncompressedSize ?? entryMeta._data?.uncompressedSize ?? 0
+          size: zipEntry.uncompressedSize ?? zipEntry._data?.uncompressedSize ?? 0
         })
 
         if (sanitizedPath.toLowerCase().endsWith('index.html')) {
           indexFound = true
           entryPromises.push(
-            zipEntry.async('string').then(content => {
+            zipEntry.async('string').then((content: string) => {
               indexHtml = content
             })
           )
         } else if (sanitizedPath.toLowerCase().endsWith('.css')) {
           entryPromises.push(
-            zipEntry.async('string').then(content => {
+            zipEntry.async('string').then((content: string) => {
               cssFiles.push(content)
             })
           )
         } else if (sanitizedPath.toLowerCase().endsWith('.js')) {
           entryPromises.push(
-            zipEntry.async('string').then(content => {
+            zipEntry.async('string').then((content: string) => {
               jsFiles.push(content)
             })
           )

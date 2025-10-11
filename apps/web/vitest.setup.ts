@@ -6,5 +6,4 @@ class ResizeObserverMock {
   disconnect() {}
 }
 
-// @ts-expect-error - attach mock to window for components relying on ResizeObserver
 globalThis.ResizeObserver = globalThis.ResizeObserver ?? ResizeObserverMock;

@@ -19,7 +19,9 @@ export default function TeacherDashboardPage() {
     redirect('/')
   }
 
-  if (session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'ADMIN' && session.user.role !== 'MENTOR') {
+  const role = session.user?.role
+  const allowedRoles = ['SUPER_ADMIN', 'ADMIN', 'MENTOR'] as const
+  if (!role || !allowedRoles.includes(role as typeof allowedRoles[number])) {
     redirect('/')
   }
 

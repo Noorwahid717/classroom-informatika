@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
+import type { Session } from 'next-auth'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
@@ -61,6 +62,11 @@ interface Submission {
   feedback?: string
 }
 
+type StudentSessionUser = Session['user'] & {
+  studentId?: string
+  class?: string
+}
+
 interface Assignment {
   id: string
   title: string
@@ -94,8 +100,9 @@ function StudentDashboardContent() {
       let studentSubmissions: Submission[] = []
       if (session?.user?.id) {
         try {
+          const studentId = session.user.id
           const submissionsResponse = await fetch(
-            `/api/classroom/submissions?studentId=${encodeURIComponent(session.user.id)}`
+            `/api/classroom/submissions?studentId=${encodeURIComponent(studentId)}`
           )
 
           if (submissionsResponse.ok) {
@@ -107,20 +114,21 @@ function StudentDashboardContent() {
               submissionsResult?.success &&
               Array.isArray(submissionsResult.data)
             ) {
-              studentSubmissions = submissionsResult.data.map(
-                (submission: ClassroomSubmissionResponse) => ({
+              studentSubmissions = submissionsResult.data.map((submission: ClassroomSubmissionResponse) => {
+                const mapped: Submission = {
                   id: submission.id,
                   assignmentId: submission.assignmentId,
                   fileName: submission.fileName,
                   filePath: submission.filePath,
                   submittedAt: submission.submittedAt,
                   studentId: submission.studentId,
-                  status: submission.status,
-                  isLate: submission.isLate,
-                  grade: submission.grade ?? undefined,
-                  feedback: submission.feedback ?? undefined
-                })
-              )
+                  ...(submission.status ? { status: submission.status } : {}),
+                  ...(typeof submission.isLate === 'boolean' ? { isLate: submission.isLate } : {}),
+                  ...(typeof submission.grade === 'number' ? { grade: submission.grade } : {}),
+                  ...(submission.feedback ? { feedback: submission.feedback } : {})
+                }
+                return mapped
+              })
             }
           }
         } catch (error) {
@@ -128,8 +136,8 @@ function StudentDashboardContent() {
         }
       }
 
-      const normalizedAssignments: Assignment[] = assignmentsPayload.map(
-        (assignment: ClassroomAssignmentResponse) => ({
+      const normalizedAssignments: Assignment[] = assignmentsPayload.map((assignment: ClassroomAssignmentResponse) => {
+        const base: Assignment = {
           id: assignment.id,
           title: assignment.title,
           description: assignment.description,
@@ -137,13 +145,19 @@ function StudentDashboardContent() {
           dueDate: assignment.dueDate,
           status: assignment.status,
           maxSubmissions: assignment.maxSubmissions,
-          submissionCount: assignment.submissionCount,
-          instructions: assignment.instructions ?? [],
-          submissions: studentSubmissions.filter(
-            submission => submission.assignmentId === assignment.id
-          )
-        })
-      )
+          submissions: studentSubmissions.filter(submission => submission.assignmentId === assignment.id)
+        }
+
+        if (typeof assignment.submissionCount === 'number') {
+          base.submissionCount = assignment.submissionCount
+        }
+
+        if (Array.isArray(assignment.instructions)) {
+          base.instructions = assignment.instructions
+        }
+
+        return base
+      })
 
       setAssignments(normalizedAssignments)
     } catch (error) {
@@ -156,7 +170,7 @@ function StudentDashboardContent() {
   useEffect(() => {
     if (status === 'loading') return
 
-    if (!session || session.user.role !== 'STUDENT') {
+    if (!session?.user || session.user.role !== 'STUDENT') {
       router.push('/student/login')
       return
     }
@@ -167,7 +181,8 @@ function StudentDashboardContent() {
   const getAssignmentStatus = (assignment: Assignment) => {
     const dueDate = new Date(assignment.dueDate)
     const now = new Date()
-    const submitted = assignment.submissions.some(s => s.studentId === session?.user.id)
+    const userId = session?.user?.id
+    const submitted = !!userId && assignment.submissions.some(s => s.studentId === userId)
     
     if (submitted) return { status: 'submitted', color: 'text-green-600', bg: 'bg-green-50', icon: CheckCircle }
     if (dueDate < now) return { status: 'overdue', color: 'text-red-600', bg: 'bg-red-50', icon: AlertCircle }
@@ -196,9 +211,11 @@ function StudentDashboardContent() {
     )
   }
 
-  if (!session || session.user.role !== 'STUDENT') {
+  if (!session?.user || session.user.role !== 'STUDENT') {
     return null
   }
+
+  const user = session.user as StudentSessionUser
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -218,9 +235,9 @@ function StudentDashboardContent() {
             
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{session.user.name}</p>
+                <p className="text-sm font-medium text-gray-900">{user.name ?? 'Siswa'}</p>
                 <p className="text-xs text-gray-600">
-                  {session.user.studentId} • {session.user.class}
+                  {user.studentId ?? '-'} • {user.class ?? '-'}
                 </p>
               </div>
               <button
@@ -244,9 +261,9 @@ function StudentDashboardContent() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Selamat Datang, {session.user.name}! 🎉</h2>
+              <h2 className="text-3xl font-bold mb-2">Selamat Datang, {user.name ?? 'Siswa'}! 🎉</h2>
               <p className="text-blue-100 text-lg">
-                Kelas {session.user.class} • NIS {session.user.studentId}
+                Kelas {user.class ?? '-'} • NIS {user.studentId ?? '-'}
               </p>
               <p className="text-blue-100 mt-2">
                 Siap untuk belajar dan mengerjakan tugas hari ini?
@@ -287,7 +304,7 @@ function StudentDashboardContent() {
               <div>
                 <p className="text-sm text-gray-600">Selesai</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {assignments.filter(a => a.submissions.some(s => s.studentId === session.user.id)).length}
+                  {assignments.filter(a => a.submissions.some(s => s.studentId === user.id)).length}
                 </p>
               </div>
             </div>
@@ -301,7 +318,7 @@ function StudentDashboardContent() {
               <div>
                 <p className="text-sm text-gray-600">Pending</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {assignments.filter(a => !a.submissions.some(s => s.studentId === session.user.id)).length}
+                  {assignments.filter(a => !a.submissions.some(s => s.studentId === user.id)).length}
                 </p>
               </div>
             </div>

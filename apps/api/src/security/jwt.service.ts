@@ -17,6 +17,8 @@ function base64UrlDecode<T = unknown>(value: string): T {
   return JSON.parse(decoded) as T;
 }
 
+type ExpiryUnit = "s" | "m" | "h" | "d";
+
 function parseExpiry(expiresIn: string | number | undefined): number | undefined {
   if (!expiresIn) return undefined;
   if (typeof expiresIn === "number") {
@@ -26,9 +28,13 @@ function parseExpiry(expiresIn: string | number | undefined): number | undefined
   if (!match) {
     throw new Error(`Unsupported expiresIn format: ${expiresIn}`);
   }
-  const [, amount, unit] = match;
+  const amount = match[1];
+  const unit = match[2] as ExpiryUnit | undefined;
+  if (!amount || !unit) {
+    throw new Error(`Unsupported expiresIn format: ${expiresIn}`);
+  }
   const value = Number.parseInt(amount, 10);
-  const multiplier: Record<string, number> = {
+  const multiplier: Record<ExpiryUnit, number> = {
     s: 1,
     m: 60,
     h: 60 * 60,
@@ -59,10 +65,10 @@ export class JwtService {
     if (parts.length !== 3) {
       throw new UnauthorizedException("Malformed token");
     }
-    const [encodedHeader, encodedPayload, signature] = parts;
+    const [encodedHeader, encodedPayload, signature] = parts as [string, string, string];
     const expectedSignature = this.signSegment(`${encodedHeader}.${encodedPayload}`);
-    const signatureBuffer = Buffer.from(signature);
-    const expectedBuffer = Buffer.from(expectedSignature);
+    const signatureBuffer = Buffer.from(signature, "base64url");
+    const expectedBuffer = Buffer.from(expectedSignature, "base64url");
     if (signatureBuffer.length !== expectedBuffer.length || !timingSafeEqual(signatureBuffer, expectedBuffer)) {
       throw new UnauthorizedException("Invalid signature");
     }

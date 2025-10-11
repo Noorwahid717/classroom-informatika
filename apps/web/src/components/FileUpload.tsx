@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef } from 'react'
 import { Upload, FileText, AlertCircle, CheckCircle, X } from 'lucide-react'
 import JSZip from 'jszip'
+import type { JSZipFile } from 'jszip'
 
 interface FileUploadProps {
   assignmentId: string
@@ -43,17 +44,16 @@ export default function FileUpload({
 
     try {
       const arrayBuffer = await file.arrayBuffer()
-      const zip = new JSZip()
-      const zipContent = await zip.loadAsync(arrayBuffer)
+      const zip = await JSZip.loadAsync(arrayBuffer)
 
       let hasHTML = false
       let hasCSS = false
       let hasJS = false
 
-      for (const [path, zipEntry] of Object.entries(zipContent.files)) {
+      for (const [path, zipEntry] of Object.entries(zip.files) as [string, JSZipFile][]) {
         if (!zipEntry.dir) {
           const extension = path.split('.').pop()?.toLowerCase()
-          const size = 0 // JSZip doesn't expose size easily, set to 0 for now
+          const size = zipEntry.uncompressedSize ?? 0
 
           structure.push({
             name: path,
@@ -139,7 +139,10 @@ export default function FileUpload({
 
     const files = Array.from(e.dataTransfer.files)
     if (files.length > 0) {
-      handleFileSelect(files[0])
+      const [firstFile] = files
+      if (firstFile) {
+        void handleFileSelect(firstFile)
+      }
     }
   }, [])
 
@@ -156,7 +159,10 @@ export default function FileUpload({
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files && files.length > 0) {
-      handleFileSelect(files[0])
+      const firstFile = files.item(0)
+      if (firstFile) {
+        void handleFileSelect(firstFile)
+      }
     }
   }
 

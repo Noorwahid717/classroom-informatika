@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth";
 import type { Session } from "next-auth";
+import { auth } from "@/auth";
 import type { Role } from "@prisma/client";
-import { authOptions } from "@/lib/auth-config";
 
 export type AppRole = Role | "TEACHER";
 
@@ -67,6 +66,9 @@ export function hasPermission(role: AppRole | null | undefined, permission: Perm
     return false;
   }
   const allowed = ROLE_PERMISSIONS[normalized];
+  if (!allowed) {
+    return false;
+  }
   if (allowed === "*") {
     return true;
   }
@@ -97,7 +99,7 @@ export function assertRole(session: Session | null, roles: AppRole[]): asserts s
 }
 
 export async function requireSession(): Promise<Session & { user: Session["user"] & { role: Role } }> {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
   if (!session || !session.user) {
     throw new AuthorizationError("Unauthorized", 401);
   }

@@ -122,7 +122,7 @@ ${safeHtml}
 }
 
 export function isStaticAsset(filename: string): boolean {
-  const cleanName = filename.toLowerCase().replace(/\\+/g, '/').split('?')[0]
+  const cleanName = (filename ?? '').toLowerCase().replace(/\\+/g, '/').split('?')[0] ?? ''
   const extension = cleanName.includes('.') ? cleanName.split('.').pop() ?? '' : ''
   return STATIC_FILE_EXTENSIONS.includes(extension)
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { AuthorizationError, assertPermission, requireSession } from '@/lib/rbac'
 import JSZip from 'jszip'
+import type { JSZipFile } from 'jszip'
 
 // GET /api/submissions/[id] - Get submission details and preview
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -55,14 +56,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       try {
         const response = await fetch(submission.zipPath || '')
         const arrayBuffer = await response.arrayBuffer()
-        const zip = new JSZip()
-        const zipContent = await zip.loadAsync(arrayBuffer)
+        const zip = await JSZip.loadAsync(arrayBuffer)
 
         const files: { [key: string]: string } = {}
-        
-        for (const [path, zipEntry] of Object.entries(zipContent.files)) {
+        const entries = Object.entries(zip.files) as [string, JSZipFile][]
+
+        for (const [path, zipEntry] of entries) {
           if (!zipEntry.dir) {
-            const content = await zipEntry.async('text')
+            const content = await zipEntry.async('string')
             files[path] = content
           }
         }

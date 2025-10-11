@@ -66,6 +66,14 @@ export async function POST(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const portfolioDb = prisma as any
 
+  type InteractiveTransaction = Parameters<typeof prisma.$transaction>[0]
+  type TransactionClient = InteractiveTransaction extends (
+    tx: infer T,
+    ...args: any[]
+  ) => any
+    ? T
+    : never
+
   const submission = await portfolioDb.portfolioSubmission.findUnique({
     where: { id },
     include: {
@@ -110,7 +118,7 @@ export async function POST(
   let evaluation
 
   try {
-    evaluation = await prisma.$transaction(async tx => {
+    evaluation = await prisma.$transaction(async (tx: TransactionClient) => {
       const extendedTx = tx as unknown as typeof portfolioDb
 
       const version = await extendedTx.portfolioVersion.findUnique({ where: { id: versionId } })
@@ -119,61 +127,61 @@ export async function POST(
         throw new Error('Versi portfolio tidak ditemukan')
       }
 
-    let record = await extendedTx.portfolioEvaluation.findUnique({ where: { versionId } })
+      let record = await extendedTx.portfolioEvaluation.findUnique({ where: { versionId } })
 
-    if (record) {
-      await extendedTx.portfolioRubricScore.deleteMany({ where: { evaluationId: record.id } })
-      record = await extendedTx.portfolioEvaluation.update({
-        where: { id: record.id },
-        data: {
-          reviewerId: session.user.id,
-          overallScore: totalScore,
-          overallNote,
-          status: evaluationStatus
-        }
-      })
-    } else {
-      record = await extendedTx.portfolioEvaluation.create({
-        data: {
-          submissionId: submission.id,
-          versionId,
-          reviewerId: session.user.id,
-          overallScore: totalScore,
-          overallNote,
-          status: evaluationStatus
-        }
-      })
-    }
-
-    await extendedTx.portfolioRubricScore.createMany({
-      data: rubricScores.map(score => ({
-        evaluationId: record!.id,
-        criterion: score.criterion,
-        score: score.score,
-        maxScore: score.maxScore,
-        comment: score.comment
-      }))
-    })
-
-    await extendedTx.portfolioSubmission.update({
-      where: { id: submission.id },
-      data: {
-        status: evaluationStatus,
-        reviewerId: session.user.id,
-        reviewerNote: overallNote,
-        grade: evaluationStatus === PortfolioSubmissionStatus.GRADED ? totalScore : null,
-        returnedAt: evaluationStatus === PortfolioSubmissionStatus.RETURNED ? new Date() : null
+      if (record) {
+        await extendedTx.portfolioRubricScore.deleteMany({ where: { evaluationId: record.id } })
+        record = await extendedTx.portfolioEvaluation.update({
+          where: { id: record.id },
+          data: {
+            reviewerId: session.user.id,
+            overallScore: totalScore,
+            overallNote,
+            status: evaluationStatus
+          }
+        })
+      } else {
+        record = await extendedTx.portfolioEvaluation.create({
+          data: {
+            submissionId: submission.id,
+            versionId,
+            reviewerId: session.user.id,
+            overallScore: totalScore,
+            overallNote,
+            status: evaluationStatus
+          }
+        })
       }
-    })
 
-    const rubric = await extendedTx.portfolioRubricScore.findMany({
-      where: { evaluationId: record.id }
-    })
+      await extendedTx.portfolioRubricScore.createMany({
+        data: rubricScores.map(score => ({
+          evaluationId: record!.id,
+          criterion: score.criterion,
+          score: score.score,
+          maxScore: score.maxScore,
+          comment: score.comment
+        }))
+      })
 
-    return {
-      evaluation: record,
-      rubric
-    }
+      await extendedTx.portfolioSubmission.update({
+        where: { id: submission.id },
+        data: {
+          status: evaluationStatus,
+          reviewerId: session.user.id,
+          reviewerNote: overallNote,
+          grade: evaluationStatus === PortfolioSubmissionStatus.GRADED ? totalScore : null,
+          returnedAt: evaluationStatus === PortfolioSubmissionStatus.RETURNED ? new Date() : null
+        }
+      })
+
+      const rubric = await extendedTx.portfolioRubricScore.findMany({
+        where: { evaluationId: record.id }
+      })
+
+      return {
+        evaluation: record,
+        rubric
+      }
     })
   } catch (error) {
     console.error('Failed to save portfolio evaluation', error)

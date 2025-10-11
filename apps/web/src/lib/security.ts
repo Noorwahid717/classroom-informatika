@@ -239,7 +239,7 @@ export const validateInput = (input: string, type: keyof typeof INPUT_VALIDATION
 export const sanitizeInput = (input: string): string => {
   return input
     .trim()
-    .replace(/[<>\"']/g, '') // Remove basic HTML/script characters
+    .replace(/[<>"']/g, '') // Remove basic HTML/script characters
     .substring(0, 10000) // Limit length
 }
 

@@ -200,6 +200,10 @@ export default function AdminPortfolioPage() {
       setSubmissions(data)
       if (data.length > 0) {
         const first = data[0]
+        if (!first) {
+          setSelected(null)
+          return
+        }
         setSelected(first)
         hydrateForm(first)
       } else {
@@ -215,10 +219,8 @@ export default function AdminPortfolioPage() {
 
   useEffect(() => {
     if (status === 'loading') return
-    if (
-      !session ||
-      (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')
-    ) {
+    const role = session?.user?.role
+    if (!role || (role !== 'ADMIN' && role !== 'SUPER_ADMIN')) {
       router.push('/admin/login')
       return
     }

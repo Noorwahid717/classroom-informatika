@@ -9,13 +9,13 @@ declare module "next-auth" {
       id: string;
       email: string;
       name: string | null;
-      role: "SUPER_ADMIN" | "ADMIN" | "MENTOR" | "STUDENT";
+      role?: "SUPER_ADMIN" | "ADMIN" | "MENTOR" | "STUDENT" | "GUEST";
       avatarUrl?: string | null;
     };
   }
 
   interface User {
-    role?: "SUPER_ADMIN" | "ADMIN" | "MENTOR" | "STUDENT";
+    role?: "SUPER_ADMIN" | "ADMIN" | "MENTOR" | "STUDENT" | "GUEST";
     accessToken?: string;
     refreshToken?: string;
     avatarUrl?: string | null;
@@ -30,7 +30,7 @@ declare module "next-auth/jwt" {
       id: string;
       email: string;
       name: string | null;
-      role: "SUPER_ADMIN" | "ADMIN" | "MENTOR" | "STUDENT";
+      role?: "SUPER_ADMIN" | "ADMIN" | "MENTOR" | "STUDENT" | "GUEST";
       avatarUrl?: string | null;
     };
   }

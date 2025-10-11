@@ -192,6 +192,8 @@ export default function ValidationResults({
     )
   }
 
+  const defaultFile = summary.results[0]?.file
+
   return (
     <div className="space-y-6">
       {/* Overall Score */}
@@ -277,7 +279,7 @@ export default function ValidationResults({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue={summary.results[0]?.file} className="w-full">
+            <Tabs className="w-full" {...(defaultFile ? { defaultValue: defaultFile } : {})}>
               <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 lg:grid-cols-4">
                 {summary.results.map((result) => (
                   <TabsTrigger 

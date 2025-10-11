@@ -4,8 +4,11 @@ import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
+const ERROR_KEYS = ['Configuration', 'AccessDenied', 'Verification', 'Default'] as const
+type AuthErrorKey = (typeof ERROR_KEYS)[number]
+
 const errorDetails: Record<
-  string,
+  AuthErrorKey,
   {
     title: string
     description: string
@@ -35,8 +38,9 @@ const errorDetails: Record<
 
 function AuthErrorContent() {
   const searchParams = useSearchParams()
-  const errorKey = searchParams.get('error') || 'Default'
-  const error = errorDetails[errorKey] || errorDetails.Default
+  const rawKey = searchParams.get('error')
+  const normalizedKey: AuthErrorKey = rawKey && ERROR_KEYS.includes(rawKey as AuthErrorKey) ? (rawKey as AuthErrorKey) : 'Default'
+  const error = errorDetails[normalizedKey]
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

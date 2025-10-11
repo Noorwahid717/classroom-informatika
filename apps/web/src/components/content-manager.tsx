@@ -92,7 +92,7 @@ export function ContentManager() {
         </div>
         <Button
           onClick={() => {
-            setActiveContent({ id: undefined, title: "", slug: "", body: "", published: false });
+            setActiveContent({ title: "", slug: "", body: "", published: false });
             setActiveTab("editor");
           }}
         >
@@ -161,15 +161,20 @@ export function ContentManager() {
             options={{ minimap: { enabled: false } }}
           />
           <Button
-            onClick={() =>
-              mutation.mutate({
-                id: activeContent.id,
+            onClick={() => {
+              const payload: EditableContent = {
                 title: activeContent.title ?? "",
                 slug: activeContent.slug ?? "",
                 body: activeContent.body ?? "",
                 published: activeContent.published ?? false
-              })
-            }
+              }
+
+              if (activeContent.id) {
+                payload.id = activeContent.id
+              }
+
+              mutation.mutate(payload)
+            }}
           >
             Simpan
           </Button>

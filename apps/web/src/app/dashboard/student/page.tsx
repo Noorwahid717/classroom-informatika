@@ -19,7 +19,8 @@ export default function StudentDashboardPage() {
     redirect('/api/auth/signin')
   }
 
-  if (session.user.role !== 'STUDENT') {
+  const role = session.user?.role
+  if (role !== 'STUDENT') {
     redirect('/')
   }
 

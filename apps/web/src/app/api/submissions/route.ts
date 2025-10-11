@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { AuthorizationError, assertPermission, requireSession } from '@/lib/rbac'
-import { put } from '@vercel/blob'
+import { put } from '@/lib/blob-storage'
 import JSZip from 'jszip'
+import type { JSZipFile } from 'jszip'
 
 // GET /api/submissions - List submissions
 export async function GET(request: NextRequest) {
@@ -128,16 +129,16 @@ export async function POST(request: NextRequest) {
 
     try {
       const arrayBuffer = await file.arrayBuffer()
-      const zip = new JSZip()
-      const zipContent = await zip.loadAsync(arrayBuffer)
+      const zip = await JSZip.loadAsync(arrayBuffer)
 
-      for (const [path, zipEntry] of Object.entries(zipContent.files)) {
+      for (const [path, zipEntry] of Object.entries(zip.files) as [string, JSZipFile][]) {
         if (!zipEntry.dir) {
           const extension = path.split('.').pop()?.toLowerCase()
           if (extension === 'html') hasHTML = true
           
+          const size = zipEntry.uncompressedSize ?? zipEntry._data?.uncompressedSize ?? 0
           fileStructure[path] = {
-            size: 0, // JSZip doesn't expose size easily, set to 0 for now
+            size,
             type: extension || 'unknown'
           }
         }

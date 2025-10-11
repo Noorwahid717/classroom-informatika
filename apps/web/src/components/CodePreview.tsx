@@ -63,13 +63,20 @@ const buildFileTree = (files: FileContent, structure: FileStructure): FileNode[]
       const node: FileNode = {
         name: part,
         path: accumulatedPath,
-        type: isFile ? 'file' : 'folder',
-        ...(isFile
-          ? {
-              content: files[path],
-              size: structure[path]?.size
-            }
-          : { children: [] })
+        type: isFile ? 'file' : 'folder'
+      }
+
+      if (isFile) {
+        const content = files[path]
+        if (content !== undefined) {
+          node.content = content
+        }
+        const size = structure[path]?.size
+        if (typeof size === 'number') {
+          node.size = size
+        }
+      } else {
+        node.children = []
       }
 
       currentLevel.push(node)
@@ -147,7 +154,11 @@ export default function CodePreview({
     const filePaths = Object.keys(codeFiles)
     const htmlFiles = filePaths.filter((path) => path.endsWith('.html'))
     const defaultFile =
-      htmlFiles.find((path) => path.includes('index.html')) || htmlFiles[0] || filePaths[0]
+      htmlFiles.find((path) => path.includes('index.html')) ?? htmlFiles[0] ?? filePaths[0] ?? null
+
+    if (!defaultFile) {
+      return
+    }
 
     setActiveFile((current) => (current && codeFiles[current] ? current : defaultFile))
   }, [codeFiles])
@@ -389,11 +400,11 @@ export default function CodePreview({
             />
           ) : (
             <div className="h-full">
-              {activeFile && codeFiles[activeFile] ? (
+              {activeFile && Object.prototype.hasOwnProperty.call(codeFiles, activeFile) ? (
                 <MonacoEditor
                   height="100%"
                   language={getFileLanguage(activeFile)}
-                  value={codeFiles[activeFile]}
+                  value={codeFiles[activeFile] ?? ''}
                   options={{
                     readOnly: true,
                     minimap: { enabled: false },

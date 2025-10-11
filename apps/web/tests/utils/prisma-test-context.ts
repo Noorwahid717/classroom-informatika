@@ -9,6 +9,6 @@ export async function createTestPrisma(): Promise<PrismaClient> {
   const schemaSql = readFileSync(schemaPath, "utf-8");
   const db = newDb({ autoCreateForeignKeyIndices: true });
   db.public.none(schemaSql);
-  const adapter = new PrismaPg(db.adapters.createPg());
-  return new PrismaClient({ adapter });
+  const adapter = new PrismaPg(db.adapters.createPg() as any);
+  return new PrismaClient({ adapter } as any);
 }

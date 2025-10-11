@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { AuthorizationError, assertPermission, requireSession } from '@/lib/rbac'
 // import { validateSubmission, generateValidationReport } from '@/lib/validation'
 import JSZip from 'jszip'
+import type { JSZipFile } from 'jszip'
 
 // POST /api/submissions/[id]/validate - Run validation checks on submission
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -47,15 +48,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       if (submission.zipPath) {
         const response = await fetch(submission.zipPath)
         const arrayBuffer = await response.arrayBuffer()
-        const zip = new JSZip()
-        const zipContent = await zip.loadAsync(arrayBuffer)
+        const zip = await JSZip.loadAsync(arrayBuffer)
 
-        for (const [path, zipEntry] of Object.entries(zipContent.files)) {
+        for (const [path, zipEntry] of Object.entries(zip.files) as [string, JSZipFile][]) {
           if (!zipEntry.dir) {
             const extension = path.split('.').pop()?.toLowerCase()
             // Only validate text files
             if (['html', 'css', 'js'].includes(extension || '')) {
-              const content = await zipEntry.async('text')
+              const content = await zipEntry.async('string')
               files[path] = content
             }
           }
