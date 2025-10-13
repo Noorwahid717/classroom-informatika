@@ -27,6 +27,9 @@ function parseExpiry(expiresIn: string | number | undefined): number | undefined
     throw new Error(`Unsupported expiresIn format: ${expiresIn}`);
   }
   const [, amount, unit] = match;
+  if (!amount || !unit) {
+    throw new Error(`Invalid expiresIn format: ${expiresIn}`);
+  }
   const value = Number.parseInt(amount, 10);
   const multiplier: Record<string, number> = {
     s: 1,
@@ -34,7 +37,14 @@ function parseExpiry(expiresIn: string | number | undefined): number | undefined
     h: 60 * 60,
     d: 60 * 60 * 24
   };
-  return value * multiplier[unit];
+  if (!(unit in multiplier)) {
+    throw new Error(`Invalid expiresIn unit: ${unit}`);
+  }
+  const factor = multiplier[unit];
+  if (typeof factor !== 'number') {
+    throw new Error(`Multiplier for unit '${unit}' is undefined`);
+  }
+  return value * factor;
 }
 
 @Injectable()
@@ -60,6 +70,12 @@ export class JwtService {
       throw new UnauthorizedException("Malformed token");
     }
     const [encodedHeader, encodedPayload, signature] = parts;
+    if (!signature) {
+      throw new UnauthorizedException("Missing signature");
+    }
+    if (!encodedPayload) {
+      throw new UnauthorizedException("Missing payload");
+    }
     const expectedSignature = this.signSegment(`${encodedHeader}.${encodedPayload}`);
     const signatureBuffer = Buffer.from(signature);
     const expectedBuffer = Buffer.from(expectedSignature);

@@ -198,8 +198,8 @@ export default function AdminPortfolioPage() {
       const payload: ApiResponse<AdminPortfolioSubmission[]> = await response.json()
       const data = Array.isArray(payload.data) ? payload.data : []
       setSubmissions(data)
-      if (data.length > 0) {
-        const first = data[0]
+      const [first] = data
+      if (first) {
         setSelected(first)
         hydrateForm(first)
       } else {
@@ -215,10 +215,8 @@ export default function AdminPortfolioPage() {
 
   useEffect(() => {
     if (status === 'loading') return
-    if (
-      !session ||
-      (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')
-    ) {
+    const role = session?.user?.role
+    if (!session || !role || (role !== 'ADMIN' && role !== 'SUPER_ADMIN')) {
       router.push('/admin/login')
       return
     }
