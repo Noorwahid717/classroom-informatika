@@ -20,11 +20,12 @@
     "eslint-plugin-import": "2.29.1",
     "next": "14.2.5",
     "prettier": "3.3.3",
-    "prisma": "5.18.0",
+  "prisma": "5.19.1",
     "turbo": "2.1.1",
     "typescript": "5.4.5"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.1.14"
+    "@tailwindcss/postcss": "^4.1.14",
+    "@prisma/client": "5.19.1"
   }
 }
