@@ -1,34 +1,32 @@
-**
 
-!apps/
-!apps/web/
-!apps/web/**
-!apps/web/package.json
-!apps/web/next.config.mjs
-!apps/web/tsconfig.json
-!apps/web/public/**
-!apps/web/prisma/**
-!apps/web/.npmrc
-!package.json
-!pnpm-lock.yaml
-!pnpm-workspace.yaml
+# Minimal .vercelignore — exclude large or irrelevant folders but allow apps/web/**
 
+# Node modules and caches
 node_modules/
 **/node_modules/
+
+# Git and CI metadata
 .git/
 .github/
 .vercel/
+
+# Next build output
 .next/
+
+# Monorepo folders we don't want to upload
 apps/api/
 worker/
 packages/
-prisma/
+
+# Misc build artifacts
 scripts/
 docs/
 tests/
 dist/
 coverage/
 .cache/
+
+# Keep everything else (including apps/web/** and apps/web/prisma/**)
 # Very restrictive .vercelignore for monorepo deployments
 
 # Default: ignore everything
