@@ -1,0 +1,31 @@
+{
+  "name": "classroom-informatika-monorepo",
+  "version": "2.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+  "build": "(corepack enable || true) && corepack prepare pnpm@8.8.0 --activate && pnpm -w install --frozen-lockfile && pnpm -w exec prisma generate --schema=./prisma/schema.prisma && pnpm --filter ./apps/web... build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@types/node": "20.12.7",
+    "@typescript-eslint/eslint-plugin": "7.12.0",
+    "@typescript-eslint/parser": "7.12.0",
+    "eslint": "8.57.0",
+    "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-import": "2.29.1",
+    "next": "14.2.5",
+    "prettier": "3.3.3",
+  "prisma": "5.19.1",
+    "turbo": "2.1.1",
+    "typescript": "5.4.5"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
+    "@prisma/client": "5.19.1"
+  }
+}

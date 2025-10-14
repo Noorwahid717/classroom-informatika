@@ -1,0 +1,8 @@
+{
+  "installCommand": "(corepack enable || true) && corepack prepare pnpm@8.8.0 --activate && pnpm -w install --frozen-lockfile",
+  "buildCommand": "(corepack enable || true) && corepack prepare pnpm@8.8.0 --activate && pnpm exec prisma generate --schema=./prisma/schema.prisma && pnpm build",
+  "framework": "nextjs",
+  "github": {
+    "silent": true
+  }
+}

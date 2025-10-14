@@ -1,0 +1,55 @@
+
+# Minimal .vercelignore — exclude large or irrelevant folders but allow apps/web/**
+# Minimal .vercelignore for monorepo: ignore everything by default then whitelist
+# the web app and essential files needed to build/deploy.
+
+# Default: ignore everything
+**
+
+# Whitelist the web app and essential files
+!apps/web/**
+!apps/web/package.json
+!apps/web/next.config.mjs
+!apps/web/tsconfig.json
+!apps/web/public/**
+!apps/web/prisma/**
+!apps/web/.npmrc
+# Monorepo .vercelignore — whitelist the web app and essential workspace files.
+
+# Start by ignoring everything, then explicitly include what we need.
+**
+
+# Keep apps/web and its build assets
+!apps/web/**
+!apps/web/package.json
+!apps/web/next.config.mjs
+!apps/web/tsconfig.json
+!apps/web/public/**
+!apps/web/prisma/**
+!apps/web/.npmrc
+
+# Keep top-level workspace manifests needed for pnpm and builds
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+
+# Exclude heavy or irrelevant folders
+node_modules/
+**/node_modules/
+.git/
+.github/
+.vercel/
+.next/
+apps/api/
+worker/
+packages/
+prisma/
+scripts/
+docs/
+tests/
+dist/
+coverage/
+.cache/
+
+# If additional files are required by the build, add them to the whitelist above.
+!pnpm-workspace.yaml

@@ -1,0 +1,75 @@
+name: Playwright E2E
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    env:
+      PW_BASE_URL: http://127.0.0.1:3000
+      ENABLE_TEST_ENDPOINTS: '1' # ensure test endpoints are enabled in the app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Enable pnpm (corepack)
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web app
+        run: pnpm --filter web build
+
+      - name: Start web app (background)
+        run: |
+          nohup pnpm --filter web start &> web-start.log &
+          echo "Started web app in background"
+
+      - name: Wait for web server
+        run: |
+          for i in {1..30}; do
+            if curl -sSf "$PW_BASE_URL" >/dev/null; then
+              echo "Server is up"
+              break
+            fi
+            echo "Waiting for server... ($i)"
+            sleep 2
+          done
+
+      - name: Seed test users (dev-only)
+        env:
+          ENABLE_TEST_ENDPOINTS: '1'
+        run: |
+          echo "Seeding test users via /api/test/seed"
+          curl -sS -X POST "$PW_BASE_URL/api/test/seed" -H "Content-Type: application/json" || true
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Generate storage state (auth.json)
+        run: |
+          npx playwright test tests/e2e/helpers/saveAuthState.spec.ts --config=tests/playwright.local.config.ts || true
+
+      - name: Run Playwright tests with storage state
+        run: |
+          npx playwright test --config=tests/playwright.local.config.ts --storage-state=tests/e2e/helpers/auth.json --reporter=github
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report || web-playwright-report || ''

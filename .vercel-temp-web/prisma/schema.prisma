@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MENTOR
+  STUDENT
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  PROCESSING
+  GRADED
+  RETURNED
+}
+
+enum RegistrationStatus {
+  PENDING
+  REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum FileCategory {
+  ANNOUNCEMENT
+  GALLERY
+  ASSIGNMENT
+  SUBMISSION
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  passwordHash       String?
+  needsPasswordRehash Boolean   @default(false)
+  googleId           String?   @unique
+  name               String?
+  avatarUrl          String?
+  role               Role      @default(STUDENT)
+  bio                String?
+  phone              String?
+  lastLoginAt        DateTime?
+  emailVerifiedAt    DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  classesOwned   Classroom[]        @relation("ClassOwner")
+  classMemberships ClassMember[]
+  submissions    Submission[]       @relation("SubmissionStudent")
+  gradesGiven    Grade[]            @relation("GradeGrader")
+  gradesReceived Grade[]            @relation("GradeStudent")
+  registrations  Registration[]
+  auditLogs      AuditLog[]
+  announcements  Announcement[]
+  refreshTokens  RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Classroom {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  startsAt    DateTime
+  endsAt      DateTime
+  capacity    Int
+  ownerId     String
+  owner       User         @relation("ClassOwner", fields: [ownerId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  members      ClassMember[]
+  assignments  Assignment[]
+  events       Event[]
+}
+
+model ClassMember {
+  id        String   @id @default(cuid())
+  classId   String
+  userId    String
+  role      Role     @default(STUDENT)
+  joinedAt  DateTime @default(now())
+
+  classroom Classroom @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, userId])
+}
+
+model Assignment {
+  id           String    @id @default(cuid())
+  classId      String
+  rubricId     String?
+  title        String
+  description  String
+  dueAt        DateTime?
+  maxScore     Int       @default(100)
+  instructions String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  classroom Classroom @relation(fields: [classId], references: [id], onDelete: Cascade)
+  rubric    Rubric?   @relation(fields: [rubricId], references: [id])
+  submissions Submission[]
+  files      FileAsset[]
+}
+
+model Rubric {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  criteria    RubricCriterion[]
+  assignments Assignment[]
+}
+
+model RubricCriterion {
+  id          String  @id @default(cuid())
+  rubricId    String
+  title       String
+  description String?
+  weight      Float
+
+  rubric Rubric @relation(fields: [rubricId], references: [id], onDelete: Cascade)
+}
+
+model Submission {
+  id            String            @id @default(cuid())
+  assignmentId  String
+  studentId     String
+  status        SubmissionStatus  @default(DRAFT)
+  repositoryUrl String?
+  previewUrl    String?
+  storageKey    String?
+  lintReport    Json?
+  score         Int?
+  submittedAt   DateTime?
+  gradedAt      DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    User       @relation("SubmissionStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  grade      Grade?
+}
+
+model Grade {
+  id              String   @id @default(cuid())
+  submissionId    String   @unique
+  rubricSnapshot  Json
+  score           Int
+  feedback        String?
+  graderId        String
+  studentId       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  grader     User       @relation("GradeGrader", fields: [graderId], references: [id])
+  student    User       @relation("GradeStudent", fields: [studentId], references: [id])
+}
+
+model Registration {
+  id           String             @id @default(cuid())
+  userId       String?
+  name         String
+  email        String
+  phone        String
+  programId    String
+  motivation   String
+  status       RegistrationStatus @default(PENDING)
+  notes        String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  body        String
+  published   Boolean  @default(false)
+  publishedAt DateTime?
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id])
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  classId     String?
+  title       String
+  description String
+  location    String
+  startsAt    DateTime
+  endsAt      DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  classroom Classroom? @relation(fields: [classId], references: [id])
+}
+
+model FileAsset {
+  id         String       @id @default(cuid())
+  category   FileCategory
+  key        String       @unique
+  bucket     String
+  checksum   String
+  size       Int
+  mimeType   String
+  uploadedBy String?
+  uploadedAt DateTime     @default(now())
+  assignment Assignment?  @relation(fields: [assignmentId], references: [id])
+  assignmentId String?
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  resource  String
+  resourceId String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model WorkerJob {
+  id          String   @id @default(cuid())
+  submissionId String
+  jobId       String   @unique
+  name        String
+  status      String   @default("queued")
+  result      Json?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime @default(now())
+}
