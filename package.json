@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.12.0",
   "scripts": {
-    "build": "NEXT_IGNORE_INCORRECT_LOCKFILE=1 turbo build",
+  "build": "(corepack enable || true) && corepack prepare pnpm@8.8.0 --activate && pnpm -w install --frozen-lockfile && pnpm -w exec prisma generate --schema=./prisma/schema.prisma && pnpm --filter ./apps/web... build",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "test": "turbo test",
