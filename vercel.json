@@ -1,22 +1,14 @@
 {
-  "builds": [
-    {
-      "src": "apps/web/package.json",
-      "use": "@vercel/next"
-    }
-  ],
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/apps/web/$1"
     }
   ],
-  "functions": {
-    "apps/web/app/api/**/*.ts": {
-      "maxDuration": 10
-    }
-  },
-  "installCommand": "pnpm install --frozen-lockfile",
+  "builds": [
+    { "src": "apps/web/package.json", "use": "@vercel/next" }
+  ],
+  "installCommand": "(corepack enable || true) && corepack prepare pnpm@8.8.0 --activate && ( [ -f apps/web/pnpm-lock.yaml ] && pnpm --filter ./apps/web... install --frozen-lockfile || pnpm --filter ./apps/web... install)",
   "buildCommand": "pnpm --filter web build && rm -rf .next && cp -R apps/web/.next .next",
   "github": {
     "silent": true

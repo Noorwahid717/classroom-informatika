@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'crypto'
-import { AuthOptions, type Session } from 'next-auth'
+import type { Session } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
@@ -7,6 +7,7 @@ import { verifyPassword } from '@/lib/auth'
 import type { AdapterUser } from 'next-auth/adapters'
 import type { User } from 'next-auth'
 import type { JWT } from 'next-auth/jwt'
+import NextAuth from 'next-auth'
 
 type ExtendedUser = (User | AdapterUser) & {
   role?: string | null
@@ -307,10 +308,10 @@ export const authOptions: AuthOptionsWithTrustHost = {
         session.user = {
           ...(session.user ?? {}),
           id: token.sub ?? session.user?.id ?? '',
-          role: (token.role as string | undefined) ?? session.user?.role ?? 'GUEST',
-          userType: (token.userType as string | undefined) ?? session.user?.userType,
-          studentId: (token.studentId as string | undefined) ?? session.user?.studentId,
-          class: (token.class as string | undefined) ?? session.user?.class
+          role: (token.role as string) ?? session.user?.role ?? 'GUEST',
+          userType: (token.userType as string) ?? session.user?.userType,
+          studentId: (token.studentId as string) ?? session.user?.studentId,
+          class: (token.class as string) ?? session.user?.class
         }
       }
       return session
@@ -322,3 +323,7 @@ export const authOptions: AuthOptionsWithTrustHost = {
     }
   }
 }
+
+const handler = NextAuth(authOptions)
+export default handler;
+export const auth = handler;

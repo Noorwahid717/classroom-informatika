@@ -8,6 +8,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const session = await requireSession()
     assertPermission(session, 'assignment:read')
 
+    const sessionUser = session.user
+    if (!sessionUser) {
+      throw new AuthorizationError('Invalid session', 401)
+    }
+    const { role, id: sessionUserId } = sessionUser
+
     const { id: assignmentId } = await params
 
     const assignment = await prisma.assignment.findUnique({
@@ -21,9 +27,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           }
         },
         submissions: {
-          where: session.user.role === 'MENTOR' || session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN'
+          where: role === 'MENTOR' || role === 'ADMIN' || role === 'SUPER_ADMIN'
             ? {}
-            : { userId: session.user.id },
+            : { userId: sessionUserId },
           include: {
             user: {
               select: { name: true, email: true }
@@ -40,10 +46,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Check if student is enrolled in the class
-    if (session.user.role === 'STUDENT') {
+    if (role === 'STUDENT') {
       const enrollment = await prisma.enrollment.findFirst({
         where: {
-          userId: session.user.id,
+          userId: sessionUserId,
           classId: assignment.classId,
           status: 'ACTIVE'
         }

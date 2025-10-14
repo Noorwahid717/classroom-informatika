@@ -1,69 +1,28 @@
-import { withAuth } from 'next-auth/middleware'
-import { NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth-config';
 
-export default withAuth(
-  function middleware(req) {
-    const { pathname } = req.nextUrl
-    const token = req.nextauth.token
-    
-    // Check if user is trying to access dashboard routes
-    if (pathname.startsWith('/dashboard')) {
-      
-      // If no token, redirect to homepage
-      if (!token) {
-        const loginUrl = new URL('/', req.url)
-        loginUrl.searchParams.set('callbackUrl', req.url)
-        return NextResponse.redirect(loginUrl)
-      }
-      
-      // Check access to teacher dashboard
-      if (pathname.startsWith('/dashboard/teacher')) {
-        const allowedRoles = ['SUPER_ADMIN', 'ADMIN', 'MENTOR']
-        if (!token.role || !allowedRoles.includes(token.role as string)) {
-          return NextResponse.redirect(new URL('/', req.url))
-        }
-      }
+export async function middleware(req: NextRequest) {
+  const session = await auth();
+  const { pathname } = req.nextUrl;
 
-      // Check access to student dashboard
-      if (pathname.startsWith('/dashboard/student')) {
-        if (token.role !== 'STUDENT') {
-          return NextResponse.redirect(new URL('/', req.url))
-        }
-      }
+  // Proteksi dashboard
+  if (pathname.startsWith('/dashboard')) {
+    if (!session || !session.user) {
+      const loginUrl = new URL('/', req.url);
+      loginUrl.searchParams.set('callbackUrl', req.url);
+      return NextResponse.redirect(loginUrl);
     }
-
-    // Only redirect from homepage if user is logged in and not already on dashboard
-    if (pathname === '/' && token && !req.nextUrl.searchParams.has('callbackUrl')) {
-      if (token.role === 'SUPER_ADMIN' || token.role === 'ADMIN' || token.role === 'MENTOR') {
-        return NextResponse.redirect(new URL('/dashboard/teacher', req.url))
-      }
-      if (token.role === 'STUDENT') {
-        return NextResponse.redirect(new URL('/dashboard/student', req.url))
-      }
+    // Role-based access
+    if (pathname.startsWith('/dashboard/teacher') && session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
+      return NextResponse.redirect('/');
     }
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        const { pathname } = req.nextUrl
-        
-        // Always allow access to homepage and auth routes
-        if (pathname === '/' || pathname.startsWith('/auth') || pathname.startsWith('/api/auth')) {
-          return true
-        }
-        
-        // For dashboard routes, require valid token
-        if (pathname.startsWith('/dashboard')) {
-          return !!token
-        }
-        
-        // Allow access to all other routes (API, etc.)
-        return true
-      },
-    },
+    if (pathname.startsWith('/dashboard/student') && session.user.role !== 'STUDENT') {
+      return NextResponse.redirect('/');
+    }
   }
-)
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: ['/dashboard/:path*']
-}
+  matcher: ['/dashboard/:path*'],
+};
