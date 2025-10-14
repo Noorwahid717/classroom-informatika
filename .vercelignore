@@ -4,11 +4,18 @@
 **
 
 # But include these essential files and the web app source
+# Very restrictive .vercelignore for monorepo deployments
+
+# Default: ignore everything
+**
+
+# But include these essential files and the web app source
 !apps/web/**
 !apps/web/package.json
 !apps/web/next.config.mjs
 !apps/web/tsconfig.json
 !apps/web/public/**
+!apps/web/prisma/**
 !package.json
 !pnpm-lock.yaml
 !pnpm-workspace.yaml
