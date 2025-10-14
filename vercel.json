@@ -4,6 +4,7 @@
     { "src": "apps/web/package.json", "use": "@vercel/next" }
   ],
   "installCommand": "(corepack enable || true) && corepack prepare pnpm@8.8.0 --activate && ( [ -f apps/web/pnpm-lock.yaml ] && pnpm --filter ./apps/web... install --frozen-lockfile || pnpm --filter ./apps/web... install)",
+  "buildCommand": "(corepack enable || true) && corepack prepare pnpm@8.8.0 --activate && pnpm --filter ./apps/web... install --frozen-lockfile && pnpm --filter ./apps/web... build",
   "github": {
     "silent": true
   }
