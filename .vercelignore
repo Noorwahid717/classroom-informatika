@@ -3,6 +3,44 @@
 # Default: ignore everything
 **
 
+# Whitelist the web app and minimal files needed for building/deploying
+!apps/
+!apps/web/
+!apps/web/**
+!apps/web/package.json
+!apps/web/next.config.mjs
+!apps/web/tsconfig.json
+!apps/web/public/**
+!apps/web/prisma/**
+!apps/web/.npmrc
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+
+# Exclude large folders and artifacts explicitly (safety)
+node_modules/
+**/node_modules/
+.git/
+.github/
+.vercel/
+.next/
+apps/api/
+worker/
+packages/
+prisma/
+scripts/
+docs/
+tests/
+dist/
+coverage/
+.cache/
+
+# If you need other files to be included, explicitly whitelist them above.
+# Very restrictive .vercelignore for monorepo deployments
+
+# Default: ignore everything
+**
+
 # But include these essential files and the web app source
 # Very restrictive .vercelignore for monorepo deployments
 
