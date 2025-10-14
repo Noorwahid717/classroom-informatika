@@ -1,8 +1,0 @@
-{
-  
-  "installCommand": "(corepack enable || true) && corepack prepare pnpm@8.8.0 --activate && pnpm -w install --frozen-lockfile",
-  "buildCommand": "(corepack enable || true) && corepack prepare pnpm@8.8.0 --activate && ./scripts/prisma-generate-if-exists.sh && pnpm --filter ./apps/web... build",
-  "github": {
-    "silent": true
-  }
-}

@@ -31,7 +31,7 @@
 ### 🔧 **System Features**
 - ✅ **Authentication** - NextAuth dengan role-based access
 - ✅ **Database** - PostgreSQL dengan Prisma ORM
-- ✅ **File Storage** - Vercel Blob untuk file ZIP
+- ✅ **File Storage** - Vercel Blob (akses via API) untuk file ZIP
 - ✅ **Code Validation** - Automated quality checking
 - ✅ **Security** - Comprehensive security measures
 - ✅ **Responsive UI** - Mobile-friendly design
@@ -46,11 +46,11 @@
 | **Backend** | Next.js API Routes | ✅ Complete |
 | **Database** | PostgreSQL + Prisma | ✅ Complete |
 | **Authentication** | NextAuth.js | ✅ Complete |
-| **File Storage** | Vercel Blob | ✅ Complete |
+| **File Storage** | Vercel Blob (API-based) | ✅ Complete |
 | **Code Editor** | Monaco Editor | ✅ Complete |
 | **UI Framework** | Tailwind CSS + Radix UI | ✅ Complete |
 | **Validation** | HTMLHint + Stylelint + ESLint | ✅ Complete |
-| **Deployment** | Vercel | ✅ Ready |
+| **Deployment** | Netlify | ✅ Ready |
 
 ---
 
@@ -318,25 +318,30 @@ Weighted Score = Σ(criterion_score × weight) / Σ(max_score × weight)
 
 ## 🚢 **Deployment**
 
-### **Vercel Deployment (Recommended)**
+### **Netlify Deployment (Recommended)**
 ```bash
-# Install Vercel CLI
-npm i -g vercel
+# Install Netlify CLI
+npm i -g netlify-cli
 
-# Deploy to production
-npm run deploy
+# Login & link repo (run once)
+netlify login
+netlify init
 
-# Or use deploy button
+# Deploy preview build
+netlify deploy --build
+
+# Deploy production build
+netlify deploy --build --prod
 ```
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Noorwahid717/landing-page-gema)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/Noorwahid717/landing-page-gema)
 
 ### **Environment Variables**
-Set di Vercel dashboard:
+Set di Netlify dashboard (Site configuration → Environment variables):
 - `DATABASE_URL` - PostgreSQL connection
 - `NEXTAUTH_SECRET` - Authentication secret
-- `NEXTAUTH_URL` - Production URL
-- `BLOB_READ_WRITE_TOKEN` - Vercel Blob token
+- `NEXTAUTH_URL` - Production URL `https://<site-name>.netlify.app`
+- `BLOB_READ_WRITE_TOKEN` - Vercel Blob API token (bisa digunakan meski hosting di Netlify)
 
 ---
 
@@ -355,7 +360,7 @@ Set di Vercel dashboard:
 - ✅ **File streaming** untuk large uploads
 
 ### **Storage**
-- ✅ **Vercel Blob** untuk scalable storage
+- ✅ **Vercel Blob (API-based)** untuk scalable storage
 - ✅ **ZIP compression** untuk file transfer
 - ✅ **CDN distribution** automatic
 
