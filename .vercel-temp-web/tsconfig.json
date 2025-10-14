@@ -1,0 +1,50 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "preserve",
+    "types": [
+      "@types/node",
+      "@types/react",
+      "@types/react-dom",
+      "@sentry/nextjs",
+      "next-auth"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@/auth": [
+        "./auth"
+      ],
+      "@classroom/api": [
+        "../api/src/index.ts"
+      ],
+      "@classroom/env": [
+        "../../packages/config/src/env.ts"
+      ],
+      "@web/config/env": [
+        "./config/env.ts"
+      ]
+    },
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "isolatedModules": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "../auth.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
