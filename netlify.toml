@@ -2,7 +2,7 @@
 # Uses pnpm workspace and Prisma generation before building the Next.js app
 
 [build]
-  command = "(corepack enable || true) && corepack prepare pnpm@8.8.0 --activate && ./scripts/prisma-generate-if-exists.sh && pnpm -w install --frozen-lockfile && pnpm --filter ./apps/web... build"
+  command = "bash -lc 'if [ -f ./scripts/netlify-build.sh ]; then bash ./scripts/netlify-build.sh; elif [ -f ../scripts/netlify-build.sh ]; then bash ../scripts/netlify-build.sh; else echo Missing netlify build script >&2; exit 1; fi'"
   publish = "apps/web/.next"
 
 [build.environment]
