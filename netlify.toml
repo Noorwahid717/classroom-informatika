@@ -1,0 +1,16 @@
+# Netlify configuration for Classroom Informatika
+# Uses pnpm workspace and Prisma generation before building the Next.js app
+
+[build]
+  command = "(corepack enable || true) && corepack prepare pnpm@8.8.0 --activate && ./scripts/prisma-generate-if-exists.sh && pnpm -w install --frozen-lockfile && pnpm --filter ./apps/web... build"
+  publish = "apps/web/.next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--version"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

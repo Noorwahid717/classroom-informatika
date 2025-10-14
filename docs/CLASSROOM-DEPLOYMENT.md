@@ -19,57 +19,62 @@
 
 ---
 
-## 🌐 **Vercel Deployment (Recommended)**
+## 🌐 **Netlify Deployment (Recommended)**
 
-### **Option 1: Quick Deploy Button**
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Noorwahid717/landing-page-gema)
+### **Option 1: Deploy to Netlify Button**
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/Noorwahid717/landing-page-gema)
 
-1. Click deploy button
-2. Connect GitHub account
-3. Import repository
-4. Configure environment variables
-5. Deploy automatically
+1. Klik tombol deploy
+2. Hubungkan akun GitHub
+3. Pilih repository Classroom Informatika
+4. Netlify akan membaca `netlify.toml` dan menyiapkan build command otomatis
+5. Tambahkan environment variable yang dibutuhkan lalu jalankan deploy pertama
 
-### **Option 2: GitHub Integration**
-1. **Push to GitHub:**
+### **Option 2: GitHub Integration Manual**
+1. **Push ke GitHub:**
 ```bash
 git add .
 git commit -m "feat: Complete Classroom Informatika system"
 git push origin main
 ```
 
-2. **Import to Vercel:**
-   - Visit [vercel.com](https://vercel.com)
-   - Click "New Project"
-   - Import GitHub repository
-   - Configure settings
+2. **Import ke Netlify:**
+   - Buka [app.netlify.com](https://app.netlify.com)
+   - Klik "Add new site" → "Import an existing project"
+   - Pilih repository GitHub
+   - Pastikan build command otomatis terisi sesuai `netlify.toml`
+   - Set environment variable sebelum menekan tombol **Deploy site**
 
-### **Option 3: Vercel CLI**
+### **Option 3: Netlify CLI**
 ```bash
-# Install Vercel CLI globally
-npm install -g vercel
+# Install Netlify CLI secara global
+npm install -g netlify-cli
 
-# Login to Vercel
-vercel login
+# Login ke Netlify
+netlify login
 
-# Deploy project
-vercel
+# Inisialisasi site baru atau sambungkan ke site yang ada
+netlify init
 
-# Deploy to production
-vercel --prod
+# Deploy preview (build dari branch saat ini)
+netlify deploy --build
+
+# Deploy ke produksi (menggunakan branch production)
+netlify deploy --build --prod
 ```
 
 ---
 
 ## 🗄️ **Database Setup**
 
-### **Option 1: Vercel Postgres (Recommended)**
+### **Option 1: Netlify Postgres / External Managed Postgres (Recommended)**
+Gunakan database Postgres terkelola (Supabase, Neon, Railway, atau Netlify Postgres beta jika tersedia).
 ```bash
-# Install Vercel Postgres
-npm install @vercel/postgres
+# Contoh instalasi client Postgres
+pnpm add @prisma/client
 
-# Create database in Vercel dashboard
-# Copy connection string to environment variables
+# Buat database melalui dashboard provider pilihan Anda
+# Salin connection string ke environment variable Netlify
 ```
 
 ### **Option 2: Supabase**
@@ -92,7 +97,7 @@ npm run db:migrate
 ## ⚙️ **Environment Variables**
 
 ### **Required Variables**
-Create these in Vercel dashboard:
+Set di **Site configuration → Environment variables** di Netlify:
 
 ```env
 # Database Connection
@@ -100,9 +105,10 @@ DATABASE_URL="postgresql://user:password@host:5432/database"
 
 # NextAuth Configuration
 NEXTAUTH_SECRET="your-super-secret-key-min-32-chars"
-NEXTAUTH_URL="https://your-domain.vercel.app"
+NEXTAUTH_URL="https://your-domain.netlify.app"
 
-# File Storage (Vercel Blob)
+# File Storage (Vercel Blob API)
+# Token dapat digunakan di luar Vercel selama project tetap aktif
 BLOB_READ_WRITE_TOKEN="vercel_blob_rw_token"
 
 # Optional: Email Provider
@@ -118,7 +124,7 @@ EMAIL_FROM="noreply@your-domain.com"
 ## 🔐 **Security Configuration**
 
 ### **Production Security Checklist:**
-- [x] **HTTPS Only** - Vercel provides automatic SSL
+- [x] **HTTPS Only** - Netlify menyediakan SSL otomatis
 - [x] **Environment Secrets** - Never commit sensitive data
 - [x] **Rate Limiting** - Already implemented in API routes
 - [x] **Input Validation** - Comprehensive validation in place
@@ -163,7 +169,7 @@ npm run lint
 npm run db:seed
 
 # Or create manually through API
-curl -X POST https://your-domain.vercel.app/api/auth/register \
+curl -X POST https://your-domain.netlify.app/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@smawahidiyah.sch.id","password":"secure-password","role":"ADMIN"}'
 ```
@@ -241,7 +247,7 @@ ls -la uploads/
 ```markdown
 🚀 **CLASSROOM INFORMATIKA SUDAH LIVE!**
 
-Website: https://classroom.smawahidiyah.vercel.app
+Website: https://classroom.smawahidiyah.netlify.app
 Admin: admin@smawahidiyah.sch.id
 
 ✅ Fitur Lengkap:
